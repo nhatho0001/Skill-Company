@@ -23,7 +23,30 @@ Dữ liệu thô  →  Phân tích  →  Tổng hợp  →  Render slide  →  Q
    JSON/TXT)                      tồn đọng)      Tôn Đông Á)
 ```
 
-Chạy theo 6 bước dưới đây; đừng nhảy bước.
+Chạy theo các bước dưới đây; đừng nhảy bước. Bước 3b (mới) cho phép số slide động theo content.
+
+---
+
+## Ràng buộc bất biến (KHÔNG được vi phạm)
+
+Đây là **brand identity** của Tôn Đông Á — không thay đổi trong bất kỳ tình huống nào, kể cả khi user cho nhiều dữ liệu hơn hay yêu cầu thiết kế "đẹp hơn":
+
+| Element | Quy tắc |
+|---|---|
+| **Logo Tôn Đông Á** | Giữ nguyên `assets/template/logo-header.jpg`, không thay/xoay/đổi màu |
+| **Background cover** | Giữ nguyên `assets/template/cover-background.jpg` (cam-vàng đặc trưng) |
+| **Font chính** | `Inter` (header), `Inter` (body). Không đổi sang Arial/Calibri/Roboto |
+| **Color cover & chapter divider** | Giữ navy `#000099` + cam `#FF6600` + đỏ `#FF0000` cho header — không đổi palette |
+| **Slide 1 (cover)** | Layout cố định: title navy, period cam, department dưới đáy. Chỉ thay text, không thay layout |
+| **Chapter slides** | Giữ layout chia chương A/B/C/D với background cam-vàng + số chương lớn |
+
+**Cho phép vary** (ở Bước 3b, Bước 5):
+- Layout của các content slide (icon rows, 3-col cards, half-bleed image, comparison table, big stat, timeline...)
+- Số lượng slide (theo content density, không cố định)
+- Image minh họa trong content slide (placeholder shape hoặc ảnh thật, miễn là không đè lên logo/cover)
+- Màu phụ trợ trong content (xanh nhạt highlight, xám body — đã có trong design-tokens)
+
+Nếu vi phạm Ràng buộc bất biến → fail QA, render lại.
 
 ---
 
@@ -338,6 +361,88 @@ report = {
 
 ---
 
+## Bước 3b. Quyết định số slide & layout (động theo dữ liệu)
+
+**Đừng cố định số slide bằng số chương.** Số slide phụ thuộc **content density**: mỗi section sau khi tổng hợp ở Bước 3 có thể bung thành 1, 2, hoặc 3 slide tùy lượng item & độ dài text.
+
+### B3b.1 — Rule tách slide theo content density
+
+Với mỗi section trong `report["sections"]`, đếm số item và chiều dài body để quyết định:
+
+| Số item trong section | Body trung bình | Số slide | Layout gợi ý |
+|---|---|---|---|
+| 1–3 item | ≤ 1 dòng | 1 slide | `big_stat` hoặc `icon_rows` |
+| 4–6 item | ≤ 1 dòng | 1 slide | `icon_rows` hoặc `cards_3col` |
+| 4–6 item | 2–3 dòng | 1 slide | `half_bleed_image` (text trái, ảnh phải) hoặc `cards_2col` |
+| 7–10 item | bất kỳ | 2 slide | Chia theme: kết quả nổi bật / kết quả thường |
+| > 10 item | bất kỳ | 2–3 slide | Chia theo priority hoặc theme con |
+| Có data số đáng visualize | — | +1 slide | `chart_with_insights` (chart trái, bullet phải) |
+| So sánh ≥ 3 cột (kế hoạch vs thực tế, tuần này vs tuần trước...) | — | +1 slide | `comparison_table` |
+
+### B3b.2 — Slide bắt buộc & slide tùy chọn
+
+**Bắt buộc** (luôn có):
+- 1 slide cover
+- 1 slide TOC (mục lục)
+- 1 chapter divider cho mỗi section chính
+- 1 slide content cho mỗi section
+- 1 slide pending (tồn đọng / trọng tâm kỳ tới)
+- 1 slide closing
+
+**Tùy chọn** (thêm khi data đủ để có ý nghĩa):
+- Slide tổng hợp KPI (`kpi_overview`) — bắt buộc nếu có ≥ 2 phòng ban hoặc ≥ 4 section
+- Slide chart (`chart_with_insights`) — khi có data số đáng visualize (xem Bước 4)
+- Slide comparison (`comparison_table`) — khi có so sánh kỳ này vs kỳ trước
+- Slide hoạt động khác (`others`) — khi có nội dung phụ không thuộc section chính
+- Chapter divider phụ — chỉ khi section đó được tách thành ≥ 2 slide
+
+### B3b.3 — Cap & sàn
+
+- **Sàn:** ≥ 4 slide (cover + 1 chapter + 1 content + closing)
+- **Cap:** ≤ 15 slide. Nếu vượt → gộp các section ngắn lại, hoặc đẩy chi tiết phụ vào slide "Phụ lục" cuối.
+- **Tỷ lệ vàng:** 60-70% là content slide, 20% chapter divider, 10-20% slide đặc biệt (chart, comparison, KPI overview).
+
+### B3b.4 — Gán layout cho từng section
+
+Sau khi quyết định số slide, mở rộng `report["sections"]` thành `report["slides"]` với layout cụ thể. Ví dụ:
+
+```python
+# Trước (output Bước 3)
+{"letter": "A", "title": "KẾT QUẢ CNTT", "items": [...8 items...]}
+
+# Sau Bước 3b (cho content density cao)
+slides = [
+    {"type": "chapter", "letter": "A", "title": "KẾT QUẢ CNTT"},
+    {"type": "content", "layout": "icon_rows",     "title": "A. Hệ thống & Hạ tầng",  "items": items[:4]},
+    {"type": "content", "layout": "cards_3col",    "title": "A. Ứng dụng & Dữ liệu",  "items": items[4:8]},
+]
+```
+
+Pattern library đầy đủ + code snippet xem **`references/layout-patterns.md`**.
+
+### B3b.5 — Decision tree chọn layout
+
+```
+Section có data số đáng visualize?
+├─ Có → chart_with_insights
+└─ Không
+   ├─ Section là so sánh ≥ 3 cột? → comparison_table
+   └─ Không
+      ├─ ≤ 3 item, body ngắn? → big_stat hoặc icon_rows
+      ├─ 4–6 item, body 1 dòng? → icon_rows
+      ├─ 4–6 item, body dài? → half_bleed_image hoặc cards_2col
+      ├─ 3 item ngang nhau (so sánh đối xứng)? → cards_3col
+      └─ > 6 item? → tách 2 slide, mỗi slide dùng icon_rows
+```
+
+### B3b.6 — Variation rule (chống đơn điệu)
+
+**Không lặp cùng 1 layout quá 2 slide liên tiếp.** Nếu Bước 3b.4 ra 3 section liên tiếp đều `icon_rows`, đổi 1 trong 3 thành `half_bleed_image` hoặc `cards_3col` để báo cáo có nhịp.
+
+Cover, TOC, chapter divider, closing → **giữ template gốc**, không vary (Ràng buộc bất biến).
+
+---
+
 ## Bước 4. Quyết định chart (chỉ khi cần)
 
 **Chỉ thêm chart nếu** dữ liệu có 1 trong các đặc điểm:
@@ -445,7 +550,8 @@ Cuối cùng, dùng `present_files` với đường dẫn file `.pptx` đã lưu
 
 - `references/design-tokens.md` — Bộ màu, font, size, spacing chính thức
 - `references/edit-template.md` — **Chi tiết cách sửa template + 7 quirks quan trọng**
-- `references/building-blocks.md` — Snippet layout (icon rows, cards 3-col, timeline, table, chart)
+- `references/building-blocks.md` — Snippet layout cơ bản (icon rows, cards 3-col, timeline, table, chart)
+- `references/layout-patterns.md` — **Pattern library 6 layout content slide** (Bước 3b)
 - `scripts/build_example.py` — **Script mẫu copy-paste được**, đã áp dụng đúng Bước 2a/2b/2d
 - `assets/template/report-template.pptx` — File template gốc
 - `assets/template/logo-header.jpg` — Logo Tôn Đông Á
