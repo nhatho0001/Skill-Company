@@ -1,11 +1,11 @@
 ---
 name: tda-kpi-report-slides
-description: "Tạo slide báo cáo định kỳ (tuần/tháng/năm) bằng tiếng Việt từ dữ liệu thô Excel/CSV/JSON/TXT theo template Tôn Đông Á. Hỗ trợ nhiều phòng ban (CNTT, Kế toán, HCM, Kinh doanh, QLK...) — tự đoán phòng từ prefix cột 'Loại công việc' hoặc theo yêu cầu của user. Hãy dùng skill này mỗi khi người dùng nhắc đến 'báo cáo tuần/tháng/năm', 'KPI report', 'slide tổng hợp', 'báo cáo vận hành', 'làm slide từ dữ liệu', 'báo cáo phòng …' (bất kỳ phòng nào), hoặc upload file dữ liệu (xlsx, csv, json, txt) kèm yêu cầu tổng hợp/trình bày/làm slide — kể cả khi người dùng không nói rõ chữ 'skill' hay 'template'. Luôn dùng skill này khi đầu ra mong muốn là file .pptx báo cáo KPI/vận hành bằng tiếng Việt."
+description: "Tạo slide báo cáo định kỳ (tuần/tháng/năm) bằng tiếng Việt từ dữ liệu thô Excel/CSV/JSON/TXT theo template Tôn Đông Á v2. Hỗ trợ nhiều phòng ban (CNTT, Kế toán, HCM, Kinh doanh, QLK...) — tự đoán phòng từ prefix cột 'Loại công việc' hoặc theo yêu cầu của user. Hãy dùng skill này mỗi khi người dùng nhắc đến 'báo cáo tuần/tháng/năm', 'KPI report', 'slide tổng hợp', 'báo cáo vận hành', 'làm slide từ dữ liệu', 'báo cáo phòng …' (bất kỳ phòng nào), hoặc upload file dữ liệu (xlsx, csv, json, txt) kèm yêu cầu tổng hợp/trình bày/làm slide — kể cả khi người dùng không nói rõ chữ 'skill' hay 'template'. Luôn dùng skill này khi đầu ra mong muốn là file .pptx báo cáo KPI/vận hành bằng tiếng Việt."
 ---
 
-# TDA KPI Report Slides
+# TDA KPI Report Slides (v2)
 
-Skill tạo slide báo cáo định kỳ (tuần / tháng / năm) cho phòng ban, tập trung vào KPI & vận hành. Đầu ra là file `.pptx` theo đúng bộ nhận diện của Tôn Đông Á (màu cam / xanh navy, logo, font Open Sans).
+Skill tạo slide báo cáo định kỳ (tuần / tháng / năm) cho phòng ban, tập trung vào KPI & vận hành. Đầu ra là file `.pptx` theo bộ nhận diện Tôn Đông Á v2 (đỏ chính + navy + cam cover, font Inter, slide 20×11.25 inch).
 
 ## Khi nào dùng skill này
 
@@ -20,31 +20,34 @@ Trigger khi người dùng:
 ```
 Dữ liệu thô  →  Phân tích  →  Tổng hợp  →  Render slide  →  QA  →  .pptx
   (Excel/CSV/                    (KPI, nổi bật,  (theo template
-   JSON/TXT)                      tồn đọng)      Tôn Đông Á)
+   JSON/TXT)                      tồn đọng)      Tôn Đông Á v2)
 ```
 
-Chạy theo các bước dưới đây; đừng nhảy bước. Bước 3b (mới) cho phép số slide động theo content.
+Chạy theo các bước dưới đây; đừng nhảy bước. Bước 3b cho phép số slide động theo content.
 
 ---
 
 ## Ràng buộc bất biến (KHÔNG được vi phạm)
 
-Đây là **brand identity** của Tôn Đông Á — không thay đổi trong bất kỳ tình huống nào, kể cả khi user cho nhiều dữ liệu hơn hay yêu cầu thiết kế "đẹp hơn":
+Đây là **brand identity** Tôn Đông Á v2 — không thay đổi trong bất kỳ tình huống nào:
 
 | Element | Quy tắc |
 |---|---|
-| **Logo Tôn Đông Á** | Giữ nguyên `assets/template/logo-header.jpg`, không thay/xoay/đổi màu |
-| **Background cover** | Giữ nguyên `assets/template/cover-background.jpg` (cam-vàng đặc trưng) |
-| **Font chính** | `Inter` (header), `Inter` (body). Không đổi sang Arial/Calibri/Roboto |
-| **Color cover & chapter divider** | Giữ navy `#000099` + cam `#FF6600` + đỏ `#FF0000` cho header — không đổi palette |
-| **Slide 1 (cover)** | Layout cố định: title navy, period cam, department dưới đáy. Chỉ thay text, không thay layout |
-| **Chapter slides** | Giữ layout chia chương A/B/C/D với background cam-vàng + số chương lớn |
+| **Template gốc** | Chỉ dùng `assets/template/report-template.pptx` (15 slide v2). Không dùng template ngoài. |
+| **Logo + footer** | Đã embed sẵn trong template — KHÔNG cần `add_picture(logo)` khi dùng Cách A. KHÔNG xóa các shape header/footer trắng có sẵn ở góc trên/dưới. |
+| **Slide size** | 20 × 11.25 inch (16:9 cinematic) — không resize |
+| **Font** | `Inter` (header + body). Không đổi sang Arial/Calibri/Roboto |
+| **Color cover** | Cam phẳng `#FF6600` + title navy `#000099` + dept navy — đã embed |
+| **Color content** | Title đỏ `#FF0000`, header card navy `#000099`, body đen `#212121`. **Không tráo đổi** |
+| **Slide 1 (cover)** | Layout cố định: title navy, period navy, department navy. Chỉ thay text qua `replace_cover_period()` (Quirk 2 — 6 paragraph riêng) |
+| **Slide 15 (closing)** | "Trân trọng kính chào !" đỏ, layout đơn giản — chỉ thay message nếu user yêu cầu |
 
 **Cho phép vary** (ở Bước 3b, Bước 5):
-- Layout của các content slide (icon rows, 3-col cards, half-bleed image, comparison table, big stat, timeline...)
-- Số lượng slide (theo content density, không cố định)
-- Image minh họa trong content slide (placeholder shape hoặc ảnh thật, miễn là không đè lên logo/cover)
-- Màu phụ trợ trong content (xanh nhạt highlight, xám body — đã có trong design-tokens)
+- Layout của các content slide (icon_rows, cards_3col, numbered_zigzag_4, image_card_3col, data_table, timeline_4_horizontal, four_col_summary, chart_with_text)
+- **Số lượng slide** (theo content density, có cap)
+- **Số columns / rows trong table** (tùy data, xem Pattern 4)
+- Image minh họa trong content slide (dùng ảnh user upload, hoặc placeholder navy, hoặc giữ ảnh template)
+- Replace chart data với số liệu thực
 
 Nếu vi phạm Ràng buộc bất biến → fail QA, render lại.
 
@@ -177,7 +180,7 @@ for name, sheet in df.items():
 
 ### Bước 2a. **DROP CỘT NHIỄU** (BẮT BUỘC trước khi phân tích)
 
-Trước khi phân tích, **luôn luôn** drop các cột metadata không cần cho báo cáo. Đây là danh sách chuẩn cho file thống kê công việc:
+Trước khi phân tích, **luôn luôn** drop các cột metadata không cần cho báo cáo:
 
 ```python
 COLUMNS_TO_DROP = [
@@ -187,10 +190,8 @@ COLUMNS_TO_DROP = [
     "Số Ticket liên quan", "Khối lượng", "Người tạo",
     "Người hủy", "Ngày hủy", "Người hoàn tất", "Ngày Ticket liên quan"
 ]
-# Chỉ drop cột thực sự tồn tại để tránh KeyError
 existing_drops = [c for c in COLUMNS_TO_DROP if c in df.columns]
 df = df.drop(columns=existing_drops)
-print(f"Đã drop {len(existing_drops)} cột nhiễu. Cột còn lại: {df.columns.tolist()}")
 ```
 
 **11 cột cốt lõi còn lại** (mong muốn) sau khi drop:
@@ -211,7 +212,6 @@ Nếu báo cáo cần nhắc đến chủ trì, dùng cụm chung như: "đội 
 Ví dụ:
 - ❌ "3 ngày (10-13/04). Đã hoàn tất: xử lý PR tồn lỗi..."
 - ✅ "Đã hoàn tất: xử lý PR tồn lỗi, đảm bảo tính toàn vẹn hệ thống Purchase Request."
-
 - ❌ "Dự án 7 ngày (17-24/04) — chủ trì A. Sang. Đang trong quá trình..."
 - ✅ "Dự án hạ tầng đang trong quá trình trình duyệt thiết bị, chưa hoàn tất."
 
@@ -221,29 +221,27 @@ Người xem chỉ cần biết **mục nào CHƯA xong** để chú ý. Mục �
 
 | Trạng thái | Cách đánh dấu |
 |------------|---------------|
-| Đã hoàn tất (`Đã hoàn tất == True`) | **Tiêu đề giữ nguyên màu mặc định** (navy `#000099` của template). Không thêm icon, không tô màu. |
-| Đang triển khai / chưa hoàn tất (`Đã hoàn tất == False`) | **Tô màu ĐỎ** (`#FF0000` hoặc `RGBColor(0xC0, 0x00, 0x00)`) cho toàn bộ chữ tiêu đề. Không thêm icon. |
+| Đã hoàn tất (`Đã hoàn tất == True`) | **Tiêu đề navy** (`#000099`). Không icon, không tô màu khác. |
+| Đang triển khai / chưa hoàn tất (`Đã hoàn tất == False`) | **Tô màu ĐỎ** (`#FF0000` / `RGBColor(0xFF, 0x00, 0x00)`) cho toàn bộ chữ tiêu đề. Không icon. |
 
 **Quy tắc áp dụng:**
 - Chỉ tô màu **HEADER**, không tô body
 - Nếu 1 item gộp nhiều CV mà có ít nhất 1 CV chưa xong → tô đỏ (ưu tiên cảnh báo)
-- Section "Tồn đọng & Trọng tâm kỳ tới" và "Hoạt động khác (kế hoạch)" → tô đỏ toàn bộ header (vì là việc tương lai/chưa làm)
+- Slide 9 "Tồn đọng & Trọng tâm kỳ tới" và slide 12 "Hoạt động khác (kế hoạch)" → tô đỏ toàn bộ header (vì là việc tương lai/chưa làm)
 - KHÔNG dùng icon `✅`, `⏳`, `🔴` ở đầu header — chỉ dùng cách tô màu
 
-**⚠️ TUYỆT ĐỐI KHÔNG dùng icon emoji** cho trạng thái — đã thử `⏳` và `🔴` nhưng render không nhất quán hoặc gây rối thị giác. Tô màu chữ là cách sạch nhất.
+**⚠️ TUYỆT ĐỐI KHÔNG dùng icon emoji** cho trạng thái — render không nhất quán hoặc gây rối thị giác. Tô màu chữ là cách sạch nhất.
 
 **Cách implement bằng python-pptx:**
 ```python
 from pptx.dml.color import RGBColor
 
-RED  = RGBColor(0xFF, 0x00, 0x00)  # đỏ cảnh báo (pending)
-NAVY = RGBColor(0x00, 0x00, 0x99)  # navy mặc định (done)
+RED  = RGBColor(0xFF, 0x00, 0x00)  # đỏ pending
+NAVY = RGBColor(0x00, 0x00, 0x99)  # navy done
 
 def force_header_color(slide, shape_name, is_pending: bool):
     """LUÔN force màu — đỏ nếu pending, navy nếu done.
-    QUAN TRỌNG: phải force cả 2 chiều vì template có một số header
-    mặc định ĐỎ (slide 6 Text 1, 4 và toàn bộ slide 9). Nếu chỉ set
-    màu khi pending, các mục done trên các slide này vẫn giữ đỏ → sai.
+    Phải force cả 2 chiều vì template có một số header mặc định ĐỎ.
     """
     target = RED if is_pending else NAVY
     for shape in slide.shapes:
@@ -255,21 +253,9 @@ def force_header_color(slide, shape_name, is_pending: bool):
                     run.font.color.rgb = target
         return True
     return False
-
-# Sử dụng: cả mục done và pending đều phải gọi force_header_color()
-force_header_color(s3, "Text 1", is_pending=False)  # → navy
-force_header_color(s3, "Text 5", is_pending=True)   # → đỏ
-force_header_color(s6, "Text 1", is_pending=False)  # FORCE navy (template default đỏ)
-force_header_color(s9, "Text 1", is_pending=True)   # đỏ (template default đỏ — trùng)
 ```
 
-**⚠️ Quirk quan trọng**: Template gốc có một số header mặc định màu đỏ — cụ thể slide 6 (`Text 1`, `Text 4`) và **toàn bộ slide 9** (`Text 1`, `Text 3`, `Text 5`). Nếu mục trên các slide này thực sự ĐÃ HOÀN TẤT, phải chủ động set NAVY (không thể bỏ qua), nếu không sẽ giữ màu đỏ template → người xem hiểu nhầm.
-
-Ví dụ:
-- ❌ "🔴 Trang bị thiết bị mạng" (navy) — có icon, không tô màu
-- ❌ "✅ Check-in hệ thống hằng ngày" (navy) — có icon thừa
-- ✅ "Trang bị thiết bị mạng" (**màu ĐỎ**) — không icon, tô đỏ
-- ✅ "Check-in hệ thống hằng ngày" (navy) — không icon, không tô
+**⚠️ Quirk quan trọng**: Template gốc v2 có một số header mặc định màu đỏ (slide 9 toàn bộ pending, slide 12 placeholder). Nếu mục trên các slide này thực sự ĐÃ HOÀN TẤT, phải chủ động set NAVY (không thể bỏ qua), nếu không sẽ giữ màu đỏ template → người xem hiểu nhầm.
 
 ### Bước 2c. Xác định cột & dữ liệu cần dùng
 
@@ -308,7 +294,7 @@ df["Score"] = df.apply(priority_score, axis=1)
 ```
 
 **Quy tắc chọn CV cho slide:**
-- Mỗi section chỉ chọn **3–5 CV có Score cao nhất** (không liệt kê tất cả)
+- Mỗi section chọn **3–5 CV có Score cao nhất** (không liệt kê tất cả)
 - CV có Score = 0 (việc thường ngày, ngắn, không quan trọng) chỉ được **đếm** trong tổng số, không lên slide riêng
 
 ---
@@ -317,36 +303,37 @@ df["Score"] = df.apply(priority_score, axis=1)
 
 Từ dữ liệu đã phân tích, tạo ra một **report outline** dạng Python dict/JSON. Đây là bước suy luận quan trọng nhất, không được lười.
 
-Cấu trúc mặc định (phỏng theo template Tôn Đông Á):
+Cấu trúc mặc định (phỏng theo template Tôn Đông Á v2):
 
 ```python
 report = {
     "cover": {
         "title": "BÁO CÁO",
-        "period": "KẾT QUẢ THÁNG 10/2025",     # điền đúng kỳ
-        "next_period": "VÀ KẾ HOẠCH THÁNG 11/2025",  # nếu có
-        "department": "PHÒNG CÔNG NGHỆ THÔNG TIN",
+        "period_current": "10/2025",     # tháng hiện tại
+        "period_next":    "11/2025",     # tháng kế tiếp
+        "department":     "PHÒNG CÔNG NGHỆ THÔNG TIN",
     },
     "toc": [
         {"letter": "A", "title": "…", "desc": "…"},
-        # 3–6 mục
+        # 3–5 mục
     ],
     "sections": [
         {
             "letter": "A",
             "title": "KẾT QUẢ CÔNG VIỆC …",
-            "layout": "icon_rows",   # hoặc "cards_3col", "timeline_4step", "table"
+            "layout": "icon_rows",   # hoặc "cards_3col", "numbered_zigzag_4", "data_table", ...
             "items": [
-                {"header": "…", "body": "…"},
+                {"header": "…", "body": "…", "is_pending": False},
                 # …
             ],
-            "chart": None,            # hoặc spec chart (xem Bước 4)
+            "chart": None,  # hoặc spec chart (xem Bước 4)
+            "table": None,  # hoặc {"headers": [...], "rows": [[...]]} (xem Pattern 4)
         },
         # …
     ],
     "pending": {                      # tồn đọng / trọng tâm kỳ tới
         "title": "TỒN ĐỌNG & TRỌNG TÂM THÁNG …",
-        "items": [{"num": 1, "header": "…", "body": "…"}, …]
+        "items": [{"header": "…", "body": "…"}, …]
     },
     "others": {…},                    # hoạt động khác (optional)
     "closing": {"message": "Trân trọng kính chào !"}
@@ -354,16 +341,16 @@ report = {
 ```
 
 **Nguyên tắc tổng hợp:**
-- Mỗi section 3–6 item, mỗi item header ngắn (≤ 8 từ), body 1–2 câu.
+- Mỗi section 3–6 item, mỗi item header **ngắn** (≤ 20 ký tự cho 3-col / ≤ 16 cho 4-col), body 1–2 câu (≤ 130 ký tự cho slide có ảnh, ≤ 200 cho slide thường).
 - Ngôn ngữ **tiếng Việt**, trang trọng, dùng danh từ hành động ("Hoàn thành …", "Triển khai …", "Ký duyệt …").
 - Số liệu đi kèm ngữ cảnh (VD: "199/205 kênh hoạt động", không phải chỉ "199").
 - Không bịa: nếu data không nói, để trống hoặc bỏ mục đó.
 
 ---
 
-## Bước 3b. Quyết định số slide & layout (động theo dữ liệu)
+## Bước 3b. Quyết định số slide & layout (động theo dữ liệu, có cap)
 
-**Đừng cố định số slide bằng số chương.** Số slide phụ thuộc **content density**: mỗi section sau khi tổng hợp ở Bước 3 có thể bung thành 1, 2, hoặc 3 slide tùy lượng item & độ dài text.
+**Đừng cố định số slide bằng số chương.** Số slide phụ thuộc **content density**: mỗi section có thể bung thành 1, 2, hoặc 3 slide tùy lượng item & độ dài text.
 
 ### B3b.1 — Rule tách slide theo content density
 
@@ -371,36 +358,56 @@ Với mỗi section trong `report["sections"]`, đếm số item và chiều dà
 
 | Số item trong section | Body trung bình | Số slide | Layout gợi ý |
 |---|---|---|---|
-| 1–3 item | ≤ 1 dòng | 1 slide | `big_stat` hoặc `icon_rows` |
-| 4–6 item | ≤ 1 dòng | 1 slide | `icon_rows` hoặc `cards_3col` |
-| 4–6 item | 2–3 dòng | 1 slide | `half_bleed_image` (text trái, ảnh phải) hoặc `cards_2col` |
+| 1–3 item | ≤ 1 dòng | 1 slide | `icon_rows` hoặc `cards_3col` (nếu đủ 3) |
+| 4–6 item | ≤ 1 dòng | 1 slide | `icon_rows` |
+| 4–6 item | 2–3 dòng | 1 slide | `icon_rows` (slide A có ảnh phải) hoặc `cards_3col` |
 | 7–10 item | bất kỳ | 2 slide | Chia theme: kết quả nổi bật / kết quả thường |
 | > 10 item | bất kỳ | 2–3 slide | Chia theo priority hoặc theme con |
-| Có data số đáng visualize | — | +1 slide | `chart_with_insights` (chart trái, bullet phải) |
-| So sánh ≥ 3 cột (kế hoạch vs thực tế, tuần này vs tuần trước...) | — | +1 slide | `comparison_table` |
+| Có data số đáng visualize | — | +1 slide | `chart_with_text` (slide 13/14 template) |
+| So sánh ≥ 3 cột metric | — | +1 slide | `data_table` (slide 11 template) ⭐ |
+| 4 mốc thời gian (năm/quý) | — | +1 slide | `timeline_4_horizontal` (slide 10 template) |
+| 3 dự án có ảnh minh hoạ | — | +1 slide | `image_card_3col` (slide 8/12 template) |
 
 ### B3b.2 — Slide bắt buộc & slide tùy chọn
 
 **Bắt buộc** (luôn có):
-- 1 slide cover
-- 1 slide TOC (mục lục)
-- 1 chapter divider cho mỗi section chính
-- 1 slide content cho mỗi section
-- 1 slide pending (tồn đọng / trọng tâm kỳ tới)
-- 1 slide closing
+- 1 slide cover (slide 1)
+- 1 slide TOC (slide 2)
+- 1 slide content cho mỗi section chính (slide 3-7 tùy số section)
+- 1 slide pending (slide 9)
+- 1 slide closing (slide 15)
 
 **Tùy chọn** (thêm khi data đủ để có ý nghĩa):
-- Slide tổng hợp KPI (`kpi_overview`) — bắt buộc nếu có ≥ 2 phòng ban hoặc ≥ 4 section
-- Slide chart (`chart_with_insights`) — khi có data số đáng visualize (xem Bước 4)
-- Slide comparison (`comparison_table`) — khi có so sánh kỳ này vs kỳ trước
-- Slide hoạt động khác (`others`) — khi có nội dung phụ không thuộc section chính
-- Chapter divider phụ — chỉ khi section đó được tách thành ≥ 2 slide
+- Slide 8 / 12 (`image_card_3col`) — khi có 3 dự án trọng điểm có ảnh
+- Slide 10 (`timeline_4_horizontal`) — khi có lộ trình theo năm/quý
+- Slide 11 (`data_table`) — khi có so sánh ≥ 3 cột metric hoặc user yêu cầu rõ "làm bảng"
+- Slide 13 / 14 (`chart_with_text`) — khi có data số đáng visualize
 
-### B3b.3 — Cap & sàn
+### B3b.3 — Cap & quy trình khi vượt cap
 
-- **Sàn:** ≥ 4 slide (cover + 1 chapter + 1 content + closing)
-- **Cap:** ≤ 15 slide. Nếu vượt → gộp các section ngắn lại, hoặc đẩy chi tiết phụ vào slide "Phụ lục" cuối.
-- **Tỷ lệ vàng:** 60-70% là content slide, 20% chapter divider, 10-20% slide đặc biệt (chart, comparison, KPI overview).
+- **Sàn:** ≥ 5 slide (cover + TOC + 1 content + pending + closing)
+- **Cap mềm:** ≤ 15 slide
+- **Tỷ lệ vàng:** 60-70% là content slide chính, 20% slide phụ (table, chart, timeline, image), 10-20% slide đặc biệt
+
+**Quy trình tách slide theo cap:**
+
+1. Đếm tổng số item trong tất cả sections + pending + others.
+2. **Tách tự động**:
+   - Nếu 1 section có > 6 item → tách section đó thành 2 slide cùng layout (theo priority score: 5 item top + N item còn lại).
+   - Nếu vẫn ≤ 15 slide → OK, render.
+3. **Khi vượt cap 15 slide**: HỎI user trước khi tiếp tục:
+   ```python
+   ask_user_input_v0(questions=[{
+       "question": f"Báo cáo có {N_total} mục, dự kiến cần {N_slides} slide (>15). Bạn muốn:",
+       "options": [
+           "Giữ nguyên — tạo đầy đủ slide (có thể dài)",
+           "Rút gọn xuống 15 slide — chỉ giữ top priority mỗi section",
+           "Tách 2 báo cáo: phần 1 (≤15 slide) + phần 2 (phụ lục)"
+       ],
+       "type": "single_select"
+   }])
+   ```
+   - **Không tự rút gọn** khi user chưa quyết — báo cáo cấp phòng cần user kiểm soát nội dung được giữ lại.
 
 ### B3b.4 — Gán layout cho từng section
 
@@ -412,9 +419,8 @@ Sau khi quyết định số slide, mở rộng `report["sections"]` thành `rep
 
 # Sau Bước 3b (cho content density cao)
 slides = [
-    {"type": "chapter", "letter": "A", "title": "KẾT QUẢ CNTT"},
-    {"type": "content", "layout": "icon_rows",     "title": "A. Hệ thống & Hạ tầng",  "items": items[:4]},
-    {"type": "content", "layout": "cards_3col",    "title": "A. Ứng dụng & Dữ liệu",  "items": items[4:8]},
+    {"type": "content", "layout": "icon_rows",  "title": "A. Hệ thống & Hạ tầng (1/2)",  "items": items_top5},
+    {"type": "content", "layout": "icon_rows",  "title": "A. Hệ thống & Hạ tầng (2/2)",  "items": items_remaining},
 ]
 ```
 
@@ -423,40 +429,84 @@ Pattern library đầy đủ + code snippet xem **`references/layout-patterns.md
 ### B3b.5 — Decision tree chọn layout
 
 ```
-Section có data số đáng visualize?
-├─ Có → chart_with_insights
-└─ Không
-   ├─ Section là so sánh ≥ 3 cột? → comparison_table
-   └─ Không
-      ├─ ≤ 3 item, body ngắn? → big_stat hoặc icon_rows
-      ├─ 4–6 item, body 1 dòng? → icon_rows
-      ├─ 4–6 item, body dài? → half_bleed_image hoặc cards_2col
-      ├─ 3 item ngang nhau (so sánh đối xứng)? → cards_3col
-      └─ > 6 item? → tách 2 slide, mỗi slide dùng icon_rows
+Section có data số đáng visualize? ──── yes ──→ chart_with_text
+       │ no
+       ▼
+So sánh ≥ 3 cột metric, hoặc user yêu cầu "bảng"? ─ yes ──→ data_table ⭐
+       │ no
+       ▼
+4 mốc thời gian (năm, quý)? ────────── yes ──→ timeline_4_horizontal
+       │ no
+       ▼
+4 bước/giai đoạn cùng kỳ? ──────────── yes ──→ numbered_zigzag_4
+       │ no
+       ▼
+3 dự án có ảnh minh hoạ? ───────────── yes ──→ image_card_3col
+       │ no
+       ▼
+Đúng 3 item đối xứng (≤ 80 từ/item)? ─ yes ──→ cards_3col
+       │ no
+       ▼
+Đúng 4 thành tựu tóm tắt? ──────────── yes ──→ four_col_summary
+       │ no
+       ▼
+                                              icon_rows (default)
 ```
 
 ### B3b.6 — Variation rule (chống đơn điệu)
 
-**Không lặp cùng 1 layout quá 2 slide liên tiếp.** Nếu Bước 3b.4 ra 3 section liên tiếp đều `icon_rows`, đổi 1 trong 3 thành `half_bleed_image` hoặc `cards_3col` để báo cáo có nhịp.
+**Không lặp cùng 1 layout quá 2 slide liên tiếp.** Nếu Bước 3b.4 ra 3 section liên tiếp đều `icon_rows`, đổi 1 trong 3 thành `cards_3col` hoặc `image_card_3col` để báo cáo có nhịp.
 
-Cover, TOC, chapter divider, closing → **giữ template gốc**, không vary (Ràng buộc bất biến).
+Cover, TOC, closing → **giữ template gốc**, không vary (Ràng buộc bất biến).
 
 ---
 
 ## Bước 4. Quyết định chart (chỉ khi cần)
 
 **Chỉ thêm chart nếu** dữ liệu có 1 trong các đặc điểm:
-- So sánh ≥ 3 mốc thời gian → line chart
-- So sánh ≥ 3 hạng mục có giá trị số → bar chart
-- Phân bổ tổng thể → pie/donut (tối đa 5 slice)
+- So sánh ≥ 3 mốc thời gian → line / column chart (slide 14 template)
+- Phân bổ tổng thể → pie/donut, tối đa 5 slice (slide 13 template)
 - Tỷ lệ hoàn thành / KPI đơn lẻ → progress bar / big stat
+- Tỷ trọng giữa các nhóm CV → donut chart (slide 13)
 
 **Không thêm chart khi:**
 - Dữ liệu định tính (trạng thái, mô tả)
 - Chỉ 1–2 điểm dữ liệu
 - Người dùng đã có bảng rõ ràng
 
-Chart nhúng dùng `pptxgenjs` (xem `references/building-blocks.md` phần Charts).
+Template v2 có sẵn slide 13 (donut) và slide 14 (column-clustered). Dùng `replace_chart_data()` (helper trong `building-blocks.md`) để thay data, **không cần build chart từ scratch**.
+
+---
+
+## Bước 4b. Quyết định table (Pattern 4)
+
+**Khi nào dùng `data_table`** — slide 11 template:
+1. **So sánh ≥ 3 cột metric** (vd: "Hạng mục / Tổng / Đã xong / % hoàn thành") — đây là use case chuẩn.
+2. **User yêu cầu rõ ràng** ("làm bảng", "so sánh dạng bảng", "table KPI", v.v.) — dùng ngay, không hỏi lại.
+
+**Số columns / rows quyết định bởi DATA**, không cố định 3×4 như placeholder. Tham khảo Pattern 4 trong `layout-patterns.md`:
+
+```python
+replace_table_in_slide(slide11,
+    headers=["Nhóm CV", "Tổng", "Đã xong", "% Hoàn thành"],
+    rows=[
+        ["A. Hạ tầng",  45, 42, "93%"],
+        ["B. ERP",      28, 25, "89%"],
+        # ... rows tùy data
+    ])
+```
+
+| Số cột | Quy tắc |
+|---|---|
+| 2 cột | KHÔNG dùng table — dùng `cards_2col` |
+| 3-5 cột | Tốt nhất, slide 20" rộng đủ |
+| 6+ cột | Cẩn thận — text mỗi cell phải ngắn, hoặc tách 2 bảng |
+
+| Số rows | Quy tắc |
+|---|---|
+| 3-5 | Tốt nhất |
+| 6-10 | OK, height auto-tính |
+| 11+ | Tách 2 bảng / 2 slide |
 
 ---
 
@@ -468,38 +518,54 @@ Chart nhúng dùng `pptxgenjs` (xem `references/building-blocks.md` phần Chart
 
 Dùng khi cấu trúc báo cáo **gần giống template gốc**. Đây là cách chính, nên dùng luôn.
 
-**Luôn luôn bắt đầu bằng script debug shape names** — template được xuất từ Gamma.app nên mỗi dòng text là một shape riêng (`Text 0`, `Text 1`, `Text 2`...), không phải paragraph trong cùng textbox.
+**Luôn luôn bắt đầu bằng `debug_slide_shapes()`** — template được xuất từ Gamma.app nên mỗi dòng text là một shape riêng (`TextBox 3`, `TextBox 4`, …), không phải paragraph trong cùng textbox.
 
 ```python
-for i, slide in enumerate(prs.slides):
-    print(f"\n=== Slide {i+1} ===")
-    for shape in slide.shapes:
-        if shape.has_text_frame and shape.text_frame.text.strip():
-            print(f"  [{shape.name}] '{shape.text_frame.text[:90]}'")
+def debug_slide_shapes(prs, slide_idx=None):
+    indices = [slide_idx] if slide_idx is not None else range(len(prs.slides))
+    for i in indices:
+        slide = prs.slides[i]
+        print(f"\n=== Slide {i+1} ===")
+        for shape in slide.shapes:
+            preview = ""
+            if shape.has_text_frame and shape.text_frame.text.strip():
+                preview = " | " + shape.text_frame.text[:80]
+            elif shape.has_table:
+                preview = f" | [TABLE {len(shape.table.rows)}r x {len(shape.table.columns)}c]"
+            elif shape.has_chart:
+                preview = " | [CHART]"
+            print(f"  [{shape.name}]{preview}")
+
+debug_slide_shapes(prs)  # CHẠY TRƯỚC khi sửa
 ```
 
 **Các quirks quan trọng** (xem chi tiết tại `references/edit-template.md`):
-1. Header & body là 2 shape riêng biệt → match theo `shape.name`, không theo paragraph
-2. Multi-run paragraph với line break cần thêm `<a:br/>` XML khi thay text
-3. Header box width cố định → rút gọn ≤ 20 ký tự (3-cột) hoặc ≤ 16 ký tự (4-cột)
-4. Thay **body trước header** khi dùng text-based replace (tránh nhầm chuỗi)
-5. Icon `Image 0–4` trên Slide 3 không có embed → xóa & thay bằng bullet "▸"
-6. Slide 3 body width bị giới hạn bởi ảnh data center → giữ body ≤ 130 ký tự
-7. Slide 3 font size đã được fix sẵn (header 15pt, body 13pt) — không cần chỉnh thêm
+1. Mỗi dòng text là 1 shape riêng → match theo `shape.name`
+2. Cover (slide 1): mỗi dòng là 1 paragraph riêng — dùng `replace_cover_period()` để replace từng paragraph (không hack `<a:br/>` như v1)
+3. **Title đa dòng có thể đè body bên dưới** — dùng `shrink_title_if_long()` cho slide 2, 6, 9, 12
+4. Header card width cố định → ≤ 20 ký tự (3-cột) / ≤ 16 ký tự (4-cột)
+5. Slide 4 timeline header ≤ 20 ký tự (tránh wrap)
+6. Slide 6 body cột trái ≤ 90 ký tự (image che)
+7. Slide 7 header column ≤ 16 ký tự
+8. **Slide 11 (Table) là placeholder** — phải dùng `replace_table_in_slide()` với data thực
+9. **Một số title nằm trong Group** (slide 11/13/14) — mọi helper phải recurse vào Group bằng `_iter_all_shapes()`
 
-Template `scripts/build_example.py` có đầy đủ helper functions copy-paste được.
+Template `scripts/build_example.py` có đầy đủ helper functions copy-paste được, đã áp dụng các quirk trên.
 
-Nếu báo cáo không cần một section nào đó (VD: không có nội dung CĐS/AI thì xóa slide D), dùng `delete_slide()`. Xóa từ cuối lên đầu để tránh lệch index.
+**Xóa slide không dùng** (vd: nếu không có nội dung CĐS/AI → xóa slide D, không có chart → xóa slide 13/14):
+```python
+delete_slide(prs, slide_idx)  # xóa từ CUỐI lên ĐẦU để tránh lệch index
+```
 
-### Cách B — Build từ pptxgenjs theo design system
+### Cách B — Build từ pptxgenjs hoặc python-pptx từ đầu
 
-Chỉ dùng khi cấu trúc **khác biệt nhiều** (VD: người dùng chỉ muốn 3 slide nhanh, hoặc có nhiều chart).
+Chỉ dùng khi cấu trúc **khác biệt nhiều** (VD: người dùng chỉ muốn 3 slide nhanh, hoặc layout custom không có trong template).
 
 Tuân thủ design tokens trong `references/design-tokens.md`. Phải dùng đúng:
-- Màu (cam `#ED7D31`, đỏ `#FF0000`, navy `#000099`)
-- Font Open Sans / Open Sans Bold
-- Logo (`assets/template/logo-header.jpg` góc phải trên)
-- Background cover (`assets/template/cover-background.jpg`) cho slide bìa
+- Slide size 20×11.25 inch
+- Màu (đỏ `#FF0000` primary, navy `#000099`, cam cover `#FF6600`)
+- Font Inter
+- KHÔNG cần file logo ngoài (template gốc embed sẵn — nếu build từ scratch thì cần re-tạo header/footer trắng, nhưng tốt hơn là dùng "Cách lai" — copy 1 slide template, clear shapes, rồi build trên đó để giữ logo embedded ở slide layout).
 
 Xem các snippet mẫu tại `references/building-blocks.md`.
 
@@ -518,23 +584,27 @@ Sau khi tạo xong, **luôn** chạy QA:
 extract-text /mnt/user-data/outputs/<file>.pptx
 
 # 2. Check placeholder còn sót
-extract-text /mnt/user-data/outputs/<file>.pptx | grep -iE "\bx{3,}\b|lorem|\[insert|TODO|<.*>"
+extract-text /mnt/user-data/outputs/<file>.pptx | grep -iE "lorem|column 1|content|page heading|TODO|\bx{3,}\b|\[insert"
 
 # 3. Visual check
 cd /home/claude
 python /mnt/skills/public/pptx/scripts/office/soffice.py --headless --convert-to pdf /mnt/user-data/outputs/<file>.pptx
-pdftoppm -jpeg -r 120 <file>.pdf slide
-ls slide-*.jpg
+rm -f slide-*.jpg
+pdftoppm -jpeg -r 100 <file>.pdf slide
+ls -1 "$PWD"/slide-*.jpg
 ```
 
 Xem lại từng slide bằng `view` tool. Kiểm tra:
-- [ ] Logo Tôn Đông Á ở góc phải trên MỖI slide (trừ slide bìa đã có sẵn trong background)
-- [ ] Font Open Sans, size slide title ≥ 28pt, body 12–16pt
-- [ ] Không text tràn khỏi box
-- [ ] Không chồng chéo (overlap)
-- [ ] Màu cam `ED7D31` / đỏ `FF0000` / navy `000099` đúng theo template
+- [ ] Logo Tôn Đông Á ở góc phải trên MỖI slide (đã embed sẵn — chỉ verify còn nguyên)
+- [ ] Footer URL `tondonga.com.vn` chỉ ở slide 1 cover
+- [ ] Font Inter (hoặc fallback Open Sans), title ≥ 36pt, body 14–16pt
+- [ ] Không text tràn khỏi box, không title 2 dòng đè body (quirk 3, 4, 5)
+- [ ] Không chồng chéo (overlap) header card với description
+- [ ] Màu đỏ `FF0000` cho title section, navy `000099` cho header card, **đỏ ≠ navy** đúng theo trạng thái pending/done
 - [ ] Tiếng Việt có dấu, không lỗi font (ô vuông, "???")
 - [ ] Ngày tháng, kỳ báo cáo đã điền đúng (không còn "tháng 10/2025" nếu user yêu cầu tháng 11)
+- [ ] Slide table (nếu có): không còn placeholder "Column 1 / content / page heading"
+- [ ] Slide chart (nếu có): data đã thay, không còn "Sales / 1st Qtr / 2nd Qtr"
 
 **Sửa tối đa 1 vòng.** Lỗi nhỏ về pixel thì bỏ qua.
 
@@ -548,20 +618,32 @@ Cuối cùng, dùng `present_files` với đường dẫn file `.pptx` đã lưu
 
 ## Reference files
 
-- `references/design-tokens.md` — Bộ màu, font, size, spacing chính thức
-- `references/edit-template.md` — **Chi tiết cách sửa template + 7 quirks quan trọng**
-- `references/building-blocks.md` — Snippet layout cơ bản (icon rows, cards 3-col, timeline, table, chart)
-- `references/layout-patterns.md` — **Pattern library 6 layout content slide** (Bước 3b)
-- `scripts/build_example.py` — **Script mẫu copy-paste được**, đã áp dụng đúng Bước 2a/2b/2d
-- `assets/template/report-template.pptx` — File template gốc
-- `assets/template/logo-header.jpg` — Logo Tôn Đông Á
-- `assets/template/cover-background.jpg` — Background cam trang bìa
+- `references/design-tokens.md` — Bộ màu, font, size, spacing chính thức v2
+- `references/edit-template.md` — **Chi tiết cách sửa template + 8 quirks quan trọng + 15-slide map**
+- `references/layout-patterns.md` — **Pattern library 7 layout content slide** (Bước 3b), bao gồm `data_table` mới
+- `references/building-blocks.md` — Helper functions chuẩn (replace_cover_period, replace_table_in_slide, replace_chart_data, force_header_color, ...)
+- `scripts/build_example.py` — **Script mẫu copy-paste được**, đã áp dụng đúng Bước 2a/2b/2d/3b
+- `assets/template/report-template.pptx` — File template gốc v2 (15 slide, 20×11.25in, đã embed logo + footer)
 
 ## Phụ thuộc
 
 ```bash
 pip install python-pptx pandas openpyxl --break-system-packages
-# Tùy chọn: npm install -g pptxgenjs  (nếu build từ đầu bằng JS)
 ```
 
 LibreOffice + pdftoppm đã có sẵn trong môi trường.
+
+---
+
+## Changelog
+
+### v2 (May 2026)
+- Slide size đổi từ 13.33×7.5 → **20×11.25 inch**
+- Cover background: ảnh phức tạp → **cam phẳng `#FF6600` (embed)**
+- Logo + footer: file ngoài → **embed sẵn trong template**
+- Title content: navy → **đỏ `#FF0000` primary**
+- Số master slides: 10 → **15** (thêm timeline, **table dynamic**, 2 chart, 3-image cards)
+- Font: Open Sans → **Inter**
+- **Pattern mới `data_table`** — số col/row tùy data, không cố định 3×4
+- **Cap 15 slide + ask user khi vượt** thay vì tự cắt
+- Xóa file asset `cover-background.jpg` + `logo-header.jpg` (không cần nữa)
