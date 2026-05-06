@@ -1,6 +1,6 @@
 ---
 name: tda-kpi-report-slides
-description: "Tạo slide báo cáo định kỳ (tuần/tháng/năm) bằng tiếng Việt từ dữ liệu thô Excel/CSV/JSON/TXT theo template Tôn Đông Á v2. Hỗ trợ nhiều phòng ban (CNTT, Kế toán, HCM, Kinh doanh, QLK...) — tự đoán phòng từ prefix cột 'Loại công việc' hoặc theo yêu cầu của user. Hãy dùng skill này mỗi khi người dùng nhắc đến 'báo cáo tuần/tháng/năm', 'KPI report', 'slide tổng hợp', 'báo cáo vận hành', 'làm slide từ dữ liệu', 'báo cáo phòng …' (bất kỳ phòng nào), hoặc upload file dữ liệu (xlsx, csv, json, txt) kèm yêu cầu tổng hợp/trình bày/làm slide — kể cả khi người dùng không nói rõ chữ 'skill' hay 'template'. Luôn dùng skill này khi đầu ra mong muốn là file .pptx báo cáo KPI/vận hành bằng tiếng Việt."
+description: "Tạo slide báo cáo định kỳ (tuần/tháng/năm) bằng tiếng Việt từ dữ liệu thô Excel/CSV/JSON/TXT theo template Tôn Đông Á v2. Hỗ trợ nhiều phòng ban (CNTT, Kế toán, HCM, Kinh doanh, QLK...) — tự đoán phòng từ prefix cột 'Loại công việc' hoặc theo yêu cầu của user. Mỗi báo cáo luôn kết thúc bằng slide 'Đánh giá kỳ + Định hướng kỳ tới' (2 cột) trước trang closing. Hãy dùng skill này mỗi khi người dùng nhắc đến 'báo cáo tuần/tháng/năm', 'KPI report', 'slide tổng hợp', 'báo cáo vận hành', 'làm slide từ dữ liệu', 'báo cáo phòng …' (bất kỳ phòng nào), 'đánh giá tuần/tháng', 'định hướng kỳ tới', hoặc upload file dữ liệu (xlsx, csv, json, txt) kèm yêu cầu tổng hợp/trình bày/làm slide — kể cả khi người dùng không nói rõ chữ 'skill' hay 'template'. Luôn dùng skill này khi đầu ra mong muốn là file .pptx báo cáo KPI/vận hành bằng tiếng Việt."
 ---
 
 # TDA KPI Report Slides (v2)
@@ -18,12 +18,12 @@ Trigger khi người dùng:
 ## Pipeline tổng thể
 
 ```
-Dữ liệu thô  →  Phân tích  →  Tổng hợp  →  Render slide  →  QA  →  .pptx
-  (Excel/CSV/                    (KPI, nổi bật,  (theo template
-   JSON/TXT)                      tồn đọng)      Tôn Đông Á v2)
+Dữ liệu thô  →  Phân tích  →  Tổng hợp  →  Đánh giá &  →  Render slide  →  QA  →  .pptx
+  (Excel/CSV/                    (KPI, nổi bật,  Định hướng    (theo template
+   JSON/TXT)                      tồn đọng)      (Bước 3c)     Tôn Đông Á v2)
 ```
 
-Chạy theo các bước dưới đây; đừng nhảy bước. Bước 3b cho phép số slide động theo content.
+Chạy theo các bước dưới đây; đừng nhảy bước. Bước 3b cho phép số slide động theo content, **Bước 3c bắt buộc** để có slide kết luận.
 
 ---
 
@@ -336,6 +336,17 @@ report = {
         "items": [{"header": "…", "body": "…"}, …]
     },
     "others": {…},                    # hoạt động khác (optional)
+    "assessment_direction": {         # ⭐ BẮT BUỘC — slide áp chót, 2 cột
+        "title": "ĐÁNH GIÁ KỲ & ĐỊNH HƯỚNG …",
+        "assessment": {               # cột TRÁI — đánh giá kỳ vừa qua
+            "header": "ĐÁNH GIÁ TUẦN/THÁNG …",
+            "items": [{"label": "…", "body": "…"}, …]   # 3-5 bullet
+        },
+        "direction": {                # cột PHẢI — định hướng kỳ kế tiếp
+            "header": "ĐỊNH HƯỚNG TUẦN/THÁNG …",
+            "items": [{"label": "…", "body": "…"}, …]   # 3-5 bullet
+        }
+    },
     "closing": {"message": "Trân trọng kính chào !"}
 }
 ```
@@ -375,7 +386,8 @@ Với mỗi section trong `report["sections"]`, đếm số item và chiều dà
 - 1 slide TOC (slide 2)
 - 1 slide content cho mỗi section chính (slide 3-7 tùy số section)
 - 1 slide pending (slide 9)
-- 1 slide closing (slide 15)
+- **1 slide Đánh giá + Định hướng** (áp chót — xem Bước 3c) ⭐
+- 1 slide closing (slide 15 — LUÔN là slide cuối cùng)
 
 **Tùy chọn** (thêm khi data đủ để có ý nghĩa):
 - Slide 8 / 12 (`image_card_3col`) — khi có 3 dự án trọng điểm có ảnh
@@ -385,9 +397,9 @@ Với mỗi section trong `report["sections"]`, đếm số item và chiều dà
 
 ### B3b.3 — Cap & quy trình khi vượt cap
 
-- **Sàn:** ≥ 5 slide (cover + TOC + 1 content + pending + closing)
-- **Cap mềm:** ≤ 15 slide
-- **Tỷ lệ vàng:** 60-70% là content slide chính, 20% slide phụ (table, chart, timeline, image), 10-20% slide đặc biệt
+- **Sàn:** ≥ 6 slide (cover + TOC + 1 content + pending + đánh giá/định hướng + closing)
+- **Cap mềm:** ≤ 16 slide (15 slide template + 1 slide Đánh giá/Định hướng chèn thêm)
+- **Tỷ lệ vàng:** 60-70% là content slide chính, 20% slide phụ (table, chart, timeline, image), 10-20% slide đặc biệt (cover/TOC/pending/đánh giá/closing)
 
 **Quy trình tách slide theo cap:**
 
@@ -395,19 +407,20 @@ Với mỗi section trong `report["sections"]`, đếm số item và chiều dà
 2. **Tách tự động**:
    - Nếu 1 section có > 6 item → tách section đó thành 2 slide cùng layout (theo priority score: 5 item top + N item còn lại).
    - Nếu vẫn ≤ 15 slide → OK, render.
-3. **Khi vượt cap 15 slide**: HỎI user trước khi tiếp tục:
+3. **Khi vượt cap 16 slide**: HỎI user trước khi tiếp tục:
    ```python
    ask_user_input_v0(questions=[{
-       "question": f"Báo cáo có {N_total} mục, dự kiến cần {N_slides} slide (>15). Bạn muốn:",
+       "question": f"Báo cáo có {N_total} mục, dự kiến cần {N_slides} slide (>16). Bạn muốn:",
        "options": [
            "Giữ nguyên — tạo đầy đủ slide (có thể dài)",
-           "Rút gọn xuống 15 slide — chỉ giữ top priority mỗi section",
-           "Tách 2 báo cáo: phần 1 (≤15 slide) + phần 2 (phụ lục)"
+           "Rút gọn xuống 16 slide — chỉ giữ top priority mỗi section",
+           "Tách 2 báo cáo: phần 1 (≤16 slide) + phần 2 (phụ lục)"
        ],
        "type": "single_select"
    }])
    ```
    - **Không tự rút gọn** khi user chưa quyết — báo cáo cấp phòng cần user kiểm soát nội dung được giữ lại.
+   - **Không bao giờ rút gọn slide Đánh giá + Định hướng** — đây là slide bắt buộc, ưu tiên cắt content slide trùng lặp trước.
 
 ### B3b.4 — Gán layout cho từng section
 
@@ -458,6 +471,173 @@ So sánh ≥ 3 cột metric, hoặc user yêu cầu "bảng"? ─ yes ──→ 
 **Không lặp cùng 1 layout quá 2 slide liên tiếp.** Nếu Bước 3b.4 ra 3 section liên tiếp đều `icon_rows`, đổi 1 trong 3 thành `cards_3col` hoặc `image_card_3col` để báo cáo có nhịp.
 
 Cover, TOC, closing → **giữ template gốc**, không vary (Ràng buộc bất biến).
+
+---
+
+## Bước 3c. Tổng hợp **Đánh giá kỳ + Định hướng kỳ tới** (BẮT BUỘC)
+
+Đây là slide **áp chót** của báo cáo (chèn ngay trước slide closing). 1 slide chia 2 cột:
+- **Cột trái — ĐÁNH GIÁ**: nhìn lại kỳ vừa qua đã làm tốt/chưa tốt gì.
+- **Cột phải — ĐỊNH HƯỚNG**: mục tiêu/ưu tiên **MỚI** của kỳ tới.
+
+### B3c.1 — Phân biệt với slide 9 "Tồn đọng & Trọng tâm kỳ tới"
+
+| Slide | Nội dung | Nguồn |
+|---|---|---|
+| **Slide 9 (Pending)** | **Trọng tâm = việc TỒN cần làm tiếp** (carry-over từ kỳ này) | Lọc `Đã hoàn tất == False` từ data kỳ vừa rồi |
+| **Slide áp chót (Đánh giá + Định hướng)** | **Định hướng = mục tiêu / ưu tiên MỚI của kỳ tới** | Suy luận từ context: dự án đang chạy, cam kết KPI, kế hoạch năm |
+
+**Quy tắc tránh trùng lặp**: Nội dung "Định hướng" KHÔNG được lặp lại bullet trong "Trọng tâm" của slide 9. Nếu một mục đã ở slide 9 → bỏ ở Định hướng (hoặc nâng tầm thành mục tiêu cấp cao hơn). Ví dụ:
+- Slide 9 (Trọng tâm): "Hoàn tất gia hạn firewall PaloAlto"
+- Slide Định hướng: "Chuẩn hóa quy trình gia hạn dịch vụ CNTT theo lịch năm 2026" *(nâng tầm — không lặp lại đầu việc cụ thể)*
+
+### B3c.2 — Tự động sinh nội dung "Đánh giá"
+
+**Nguyên tắc: Claude tự quyết theo data có gì.** Quan sát data sẵn có rồi chọn 1 trong 3 dạng dưới (hoặc trộn). Không hỏi user — tự suy luận:
+
+| Dạng | Khi nào dùng | Nội dung gợi ý |
+|---|---|---|
+| **(a) KPI số liệu** | Data có đủ trường để tính tỉ lệ hoàn thành, tổng việc, breakdown done/pending | "Tỉ lệ hoàn thành 87% (95/109 CV)", "5 dự án trọng điểm hoàn tất đúng hạn", "Tồn đọng 14 CV — chiếm 13% tổng việc" |
+| **(b) Định tính** | Data ít số liệu, hoặc chỉ có mô tả công việc | "Điểm tốt: chủ động xử lý sự cố hạ tầng kịp thời", "Cần cải thiện: tiến độ dự án ERP chậm so với kế hoạch" |
+| **(c) Hỗn hợp** | Data đủ phong phú | Mix: 2 bullet KPI số + 2 bullet định tính |
+
+**Cách auto-detect** (luôn chạy logic này, không hỏi):
+```python
+def decide_assessment_style(df):
+    n_total = len(df)
+    n_done  = (df["Đã hoàn tất"] == True).sum() if "Đã hoàn tất" in df.columns else 0
+    has_kpi_data = n_total >= 10 and n_done > 0  # đủ data để tính %
+    has_priority = "Score" in df.columns and df["Score"].max() >= 100
+    has_project  = "Dự án" in df.columns and df["Dự án"].notna().sum() >= 3
+
+    if has_kpi_data and (has_priority or has_project):
+        return "hybrid"   # → 2 KPI bullet + 2 định tính bullet
+    elif has_kpi_data:
+        return "kpi"      # → 3-4 bullet số liệu
+    else:
+        return "qualitative"  # → 3-4 bullet điểm tốt / cần cải thiện
+```
+
+**Quy tắc nội dung Đánh giá** (3-5 bullet, mỗi bullet 1-2 câu):
+- Mỗi bullet có **label ngắn** (≤ 18 ký tự, kiểu "Hoàn thành KPI", "Hạ tầng ổn định", "Cần cải thiện") + **body** giải thích.
+- Có **ÍT NHẤT 1 bullet "Cần cải thiện"** nếu phát hiện được vấn đề (tỉ lệ tồn cao, dự án chậm, sự cố lặp lại). Báo cáo không được toàn lời khen — không trung thực.
+- **Tô màu label**:
+  - Bullet "đã làm tốt" / KPI đạt → label NAVY `#000099`
+  - Bullet "cần cải thiện" / KPI chưa đạt → label ĐỎ `#FF0000`
+- **Không tên cá nhân** (theo Bước 2b).
+- **Không số liệu bịa**: nếu không tính được %, đừng ghi %. Chỉ ghi con số tuyệt đối hoặc chuyển sang định tính.
+
+Ví dụ output:
+```python
+"assessment": {
+    "header": "ĐÁNH GIÁ TUẦN 19/2026",
+    "items": [
+        {"label": "Hoàn thành KPI",   "body": "Tỉ lệ hoàn tất 87% (95/109 CV), vượt mục tiêu kỳ.", "is_pending": False},
+        {"label": "Hạ tầng ổn định",  "body": "Không sự cố hệ thống nghiêm trọng, check-in hằng ngày đầy đủ.", "is_pending": False},
+        {"label": "Dự án ERP chậm",   "body": "2/3 milestone change-request trễ hạn, cần đẩy nhanh kỳ tới.", "is_pending": True},
+        {"label": "Tồn đọng PR",      "body": "14 PR chưa duyệt, chiếm 13% — cao hơn ngưỡng 10%.", "is_pending": True},
+    ]
+}
+```
+
+### B3c.3 — Tự động sinh nội dung "Định hướng"
+
+**Nguyên tắc**: nhìn về phía trước, KHÔNG mô tả việc tồn (đã có ở slide 9). Định hướng là **mục tiêu cấp cao hơn**:
+- Mục tiêu KPI/sản lượng kỳ tới (vd "Giảm tồn đọng PR xuống ≤ 10%")
+- Khởi động dự án mới / giai đoạn mới
+- Cải tiến quy trình / chuẩn hóa
+- Đào tạo, nghiên cứu giải pháp
+- Phối hợp liên phòng
+
+**Cách suy luận** (theo thứ tự ưu tiên):
+1. Nếu data có cột `Dự án` với dự án đang chạy chưa kết thúc → định hướng "Đẩy giai đoạn 2/3 của dự án X".
+2. Nếu Đánh giá có bullet "cần cải thiện" → định hướng tương ứng "Khắc phục Y bằng cách Z" (nâng tầm thành hành động cải tiến, không phải sửa từng việc).
+3. Nếu phòng có loại CV "Nghiên cứu/Đào tạo/Quy trình" trong kỳ → định hướng "Tiếp tục/mở rộng …".
+4. Nếu quá ít context → đề xuất **3 định hướng generic** dựa trên phòng (xem mapping dưới).
+
+**Mapping định hướng generic theo phòng** (fallback khi data nghèo):
+```python
+GENERIC_DIRECTIONS = {
+    "CNTT": [
+        "Duy trì SLA hạ tầng & ổn định ERP",
+        "Đẩy nhanh dự án chuyển đổi số trọng điểm",
+        "Chuẩn hóa quy trình bảo trì & gia hạn dịch vụ",
+    ],
+    "KT": [
+        "Đảm bảo tiến độ đóng sổ & báo cáo định kỳ",
+        "Rà soát công nợ & dòng tiền",
+        "Hoàn thiện hồ sơ kiểm toán",
+    ],
+    "HCM": [
+        "Hoàn thiện kế hoạch tuyển dụng kỳ tới",
+        "Tổ chức đào tạo nội bộ theo lộ trình",
+        "Rà soát chính sách phúc lợi & văn hóa",
+    ],
+    "KD": [
+        "Hoàn thành chỉ tiêu doanh số kỳ tới",
+        "Mở rộng kênh phân phối & chăm sóc KH lớn",
+        "Triển khai chương trình khuyến mãi mới",
+    ],
+    "QLK": [
+        "Tối ưu vòng quay tồn kho",
+        "Hoàn thiện kiểm kê định kỳ",
+        "Chuẩn hóa quy trình xuất nhập",
+    ],
+}
+```
+
+**Quy tắc nội dung Định hướng** (3-5 bullet):
+- Label ngắn (≤ 18 ký tự), body 1-2 câu.
+- Dùng **động từ tương lai**: "Đẩy nhanh", "Hoàn thành", "Triển khai", "Chuẩn hóa", "Mở rộng" — KHÔNG dùng "Tiếp tục theo dõi" / "Cố gắng" (mơ hồ).
+- **Có thể có chỉ tiêu cụ thể** nếu suy ra được từ data: "Giảm tồn đọng từ 14 → ≤ 8 CV", "Hoàn thành 100% gia hạn dịch vụ trước ngày X".
+- **Tất cả label NAVY** `#000099` (định hướng = mục tiêu, mặc định trang trọng — không tô đỏ vì không phải pending).
+
+Ví dụ output:
+```python
+"direction": {
+    "header": "ĐỊNH HƯỚNG TUẦN 20/2026",
+    "items": [
+        {"label": "Giảm tồn đọng PR",     "body": "Mục tiêu kéo tỉ lệ tồn từ 13% xuống ≤ 8% trong tuần 20."},
+        {"label": "Đẩy ERP giai đoạn 2",  "body": "Hoàn tất 3 change-request trọng điểm trước cuối kỳ."},
+        {"label": "Chuẩn hóa SLA",        "body": "Ban hành quy trình gia hạn dịch vụ CNTT theo lịch năm."},
+        {"label": "Đào tạo nội bộ",       "body": "Tổ chức 1 buổi training về quy trình mới cho đội Hỗ trợ."},
+    ]
+}
+```
+
+### B3c.4 — Render slide (layout 2 cột)
+
+Slide này dùng layout `cards_2col` (chèn mới — KHÔNG có sẵn trong template gốc 15 slide). Cách build:
+
+**Cách lai (khuyến nghị)**: duplicate slide 5 (`cards_3col`) rồi xóa cột 3 + adjust width. Hoặc duplicate slide 9 (Pending — đã có 4 ô vuông) rồi reshape thành 2 ô lớn.
+
+```python
+# Khuyến nghị: duplicate slide 5 và remap
+new_slide = duplicate_slide(prs, source_idx=4)  # slide 5 (0-indexed = 4)
+# Xóa shapes cột 3 (TextBox phía phải nhất)
+# Resize cột 1 → trái-50%, cột 2 → phải-50%
+# Set title section "ĐÁNH GIÁ KỲ & ĐỊNH HƯỚNG …"
+# Đổ assessment.items vào cột trái (mỗi item = 1 sub-card)
+# Đổ direction.items vào cột phải
+# Force màu label theo is_pending (Bước 2b-bis)
+```
+
+**Vị trí chèn**: ngay TRƯỚC slide closing (slide cuối cùng). Sau khi build xong tất cả slide khác, dùng:
+```python
+# Move slide vừa tạo lên vị trí (số slide hiện tại - 1)
+# Slide closing phải LUÔN là slide cuối
+move_slide(prs, source_idx=len(prs.slides)-1, target_idx=len(prs.slides)-2)
+```
+
+Code chi tiết + helper `move_slide()` xem bổ sung tại `references/building-blocks.md` (cần tạo thêm helper khi gặp lần đầu).
+
+### B3c.5 — Khi nào ĐƯỢC bỏ qua slide này?
+
+**Mặc định: KHÔNG được bỏ**. Slide Đánh giá + Định hướng là phần kết luận của báo cáo, luôn phải có.
+
+Trường hợp duy nhất được bỏ: **user yêu cầu rõ ràng** "không cần slide đánh giá", "bỏ phần định hướng", "chỉ làm phần dữ liệu thôi". Khi đó ghi nhận và skip.
+
+Nếu data quá nghèo để suy luận → vẫn render slide này, dùng GENERIC_DIRECTIONS + đánh giá định tính tối thiểu (vd "Hoàn thành các đầu việc theo kế hoạch", "Cần bổ sung dữ liệu theo dõi cho kỳ tới").
 
 ---
 
@@ -605,6 +785,11 @@ Xem lại từng slide bằng `view` tool. Kiểm tra:
 - [ ] Ngày tháng, kỳ báo cáo đã điền đúng (không còn "tháng 10/2025" nếu user yêu cầu tháng 11)
 - [ ] Slide table (nếu có): không còn placeholder "Column 1 / content / page heading"
 - [ ] Slide chart (nếu có): data đã thay, không còn "Sales / 1st Qtr / 2nd Qtr"
+- [ ] **Slide Đánh giá + Định hướng (áp chót) phải có mặt**, ngay TRƯỚC slide closing
+- [ ] **Cột TRÁI** = Đánh giá kỳ vừa qua (3-5 bullet), có ít nhất 1 bullet "cần cải thiện" tô đỏ nếu data có vấn đề
+- [ ] **Cột PHẢI** = Định hướng kỳ tới (3-5 bullet, label NAVY, dùng động từ tương lai)
+- [ ] **Định hướng KHÔNG lặp lại "Trọng tâm" của slide 9** (kiểm tra từng bullet — không có bullet nào trùng nội dung)
+- [ ] Định hướng không có cụm mơ hồ: "tiếp tục theo dõi", "cố gắng hoàn thành", "duy trì như cũ"
 
 **Sửa tối đa 1 vòng.** Lỗi nhỏ về pixel thì bỏ qua.
 
@@ -636,6 +821,15 @@ LibreOffice + pdftoppm đã có sẵn trong môi trường.
 ---
 
 ## Changelog
+
+### v2.1 (May 2026)
+- **Thêm slide BẮT BUỘC "Đánh giá kỳ + Định hướng kỳ tới"** (áp chót, trước closing) — 1 slide chia 2 cột
+- Thêm **Bước 3c** với logic auto-decide style đánh giá (KPI / định tính / hybrid theo data)
+- Thêm `GENERIC_DIRECTIONS` mapping fallback theo phòng (CNTT/KT/HCM/KD/QLK)
+- Update sàn slide: 5 → 6, cap mềm: 15 → 16
+- Phân biệt rõ "Trọng tâm" (slide 9 — việc tồn) vs "Định hướng" (mục tiêu MỚI kỳ tới) — không trùng lặp
+- Update cấu trúc `report` dict: thêm key `assessment_direction`
+- Bổ sung 5 mục QA mới cho slide đánh giá/định hướng
 
 ### v2 (May 2026)
 - Slide size đổi từ 13.33×7.5 → **20×11.25 inch**
