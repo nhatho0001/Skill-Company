@@ -1,9 +1,9 @@
 ---
 name: tda-kpi-report-slides
-description: "Tạo slide báo cáo định kỳ (tuần/tháng/năm) bằng tiếng Việt từ dữ liệu thô Excel/CSV/JSON/TXT theo template Tôn Đông Á v2. Hỗ trợ nhiều phòng ban (CNTT, Kế toán, HCM, Kinh doanh, QLK...) — tự đoán phòng từ prefix cột 'Loại công việc' hoặc theo yêu cầu của user. Mỗi báo cáo luôn kết thúc bằng slide 'Đánh giá kỳ + Định hướng kỳ tới' (2 cột) trước trang closing. Hãy dùng skill này mỗi khi người dùng nhắc đến 'báo cáo tuần/tháng/năm', 'KPI report', 'slide tổng hợp', 'báo cáo vận hành', 'làm slide từ dữ liệu', 'báo cáo phòng …' (bất kỳ phòng nào), 'đánh giá tuần/tháng', 'định hướng kỳ tới', hoặc upload file dữ liệu (xlsx, csv, json, txt) kèm yêu cầu tổng hợp/trình bày/làm slide — kể cả khi người dùng không nói rõ chữ 'skill' hay 'template'. Luôn dùng skill này khi đầu ra mong muốn là file .pptx báo cáo KPI/vận hành bằng tiếng Việt."
+description: "Tạo slide báo cáo định kỳ (tuần/tháng/năm) bằng tiếng Việt từ dữ liệu thô Excel/CSV/JSON/TXT theo template Tôn Đông Á v3 (16 slide, có slide 13 chuyên cho Đánh giá+Định hướng). Hỗ trợ nhiều phòng ban (CNTT, Kế toán, HCM, Kinh doanh, QLK...) — tự đoán phòng từ prefix cột 'Loại công việc' hoặc theo yêu cầu của user. Báo cáo TUẦN/NĂM tự override các default 'THÁNG' của template. Mỗi báo cáo luôn có slide 13 (3 cột: Điểm tốt | Cần cải thiện | Định hướng) trước trang closing slide 16. Hãy dùng skill này mỗi khi người dùng nhắc đến 'báo cáo tuần/tháng/năm', 'KPI report', 'slide tổng hợp', 'báo cáo vận hành', 'làm slide từ dữ liệu', 'báo cáo phòng …' (bất kỳ phòng nào), 'đánh giá tuần/tháng', 'định hướng kỳ tới', hoặc upload file dữ liệu (xlsx, csv, json, txt) kèm yêu cầu tổng hợp/trình bày/làm slide — kể cả khi người dùng không nói rõ chữ 'skill' hay 'template'. Luôn dùng skill này khi đầu ra mong muốn là file .pptx báo cáo KPI/vận hành bằng tiếng Việt."
 ---
 
-# TDA KPI Report Slides (v2)
+# TDA KPI Report Slides (v2.3)
 
 Skill tạo slide báo cáo định kỳ (tuần / tháng / năm) cho phòng ban, tập trung vào KPI & vận hành. Đầu ra là file `.pptx` theo bộ nhận diện Tôn Đông Á v2 (đỏ chính + navy + cam cover, font Inter, slide 20×11.25 inch).
 
@@ -257,6 +257,54 @@ def force_header_color(slide, shape_name, is_pending: bool):
 
 **⚠️ Quirk quan trọng**: Template gốc v2 có một số header mặc định màu đỏ (slide 9 toàn bộ pending, slide 12 placeholder). Nếu mục trên các slide này thực sự ĐÃ HOÀN TẤT, phải chủ động set NAVY (không thể bỏ qua), nếu không sẽ giữ màu đỏ template → người xem hiểu nhầm.
 
+### Bước 2b-ter. **Override mặc định "THÁNG" khi báo cáo TUẦN/NĂM** (BẮT BUỘC)
+
+Template v2 được thiết kế cho báo cáo **THÁNG** — text mặc định trên cover, TOC, slide 9, slide 11 đều ghi "THÁNG". Khi user yêu cầu báo cáo TUẦN hoặc NĂM, **phải override các chỗ sau** trước khi render content:
+
+| Slide | Text gốc | Override khi TUẦN | Override khi NĂM |
+|---|---|---|---|
+| 1 (cover) | "KẾT QUẢ THÁNG …" | "KẾT QUẢ TUẦN N/Tx-yyyy" | "KẾT QUẢ NĂM yyyy" |
+| 1 (cover) | "VÀ KẾ HOẠCH THÁNG …" | "VÀ ĐỊNH HƯỚNG TUẦN N+1/Tx" | "VÀ KẾ HOẠCH NĂM yyyy+1" |
+| 2 (TOC) | "MỤC LỤC: ... TRONG THÁNG" | thay "THÁNG" → "TUẦN" | thay "THÁNG" → "NĂM" |
+| 9 (pending) | "TỒN ĐỌNG & TRỌNG TÂM THÁNG …" | "TỒN ĐỌNG TUẦN N+1/Tx" | "TỒN ĐỌNG QUÝ I/yyyy+1" |
+| 11 (table) | "BẢNG TỔNG HỢP CÔNG VIỆC THÁNG …" | "BẢNG TỔNG HỢP TUẦN N/Tx" | "BẢNG TỔNG HỢP NĂM yyyy" |
+| **13 (đánh giá+định hướng)** | "Heading for the topic..." (placeholder) | "ĐÁNH GIÁ KỲ & ĐỊNH HƯỚNG TUẦN N+1/Tx" | "ĐÁNH GIÁ NĂM yyyy & ĐỊNH HƯỚNG NĂM yyyy+1" |
+
+**Code mẫu cho slide 2**:
+```python
+# CẦN làm cả replace_text_anywhere VÀ shrink_title sau đó
+replace_text_anywhere(s2, "TRONG THÁNG", "TRONG TUẦN")
+shrink_title(s2, "TextBox 3", max_chars=40, small_size=30)
+```
+
+**Quy tắc đặt tên kỳ TUẦN** (cho `PERIOD_CURRENT`, `PERIOD_NEXT`):
+- Định dạng: `"Tuần N/Tx-yyyy"` (vd `"Tuần 5/T4-2026"`)
+- Kèm `PERIOD_RANGE` ngày cụ thể: `"27/04 — 03/05/2026"` để dùng trong description
+- Tuần cuối tháng có thể bao trùm sang tháng kế (vd tuần 5/T4 = 27/4–3/5) — ghi rõ trong description, không gò vào 1 tháng.
+
+**Quy tắc xác định "Tuần N của tháng X"**:
+- Tuần 1 = tuần chứa ngày 1 của tháng (ISO Mon-Sun)
+- Tuần N = tuần thứ N tính từ tuần 1
+- Tuần cuối = tuần chứa ngày cuối tháng (có thể trùng tuần đầu tháng kế)
+- Khi user nói "tuần 5 tháng 4" mà tháng đó chỉ có 4 tuần ISO → tự suy luận là **tuần cuối tháng** (27/4–3/5 cho tháng 4/2026), KHÔNG hỏi lại.
+
+**Filter dữ liệu theo tuần**:
+```python
+from datetime import datetime
+week_start = datetime(2026, 4, 27)
+week_end = datetime(2026, 5, 3, 23, 59, 59)
+
+def overlap_week(row):
+    s, e = row["Từ ngày"], row["Đến ngày"]
+    if pd.isna(s) and pd.isna(e): return False
+    if pd.isna(e): e = s
+    if pd.isna(s): s = e
+    return not (e < week_start or s > week_end)
+
+df_week = df[df.apply(overlap_week, axis=1)].copy()
+```
+**Quan trọng**: dùng overlap (CV có thời gian giao với tuần), không phải containment. CV bắt đầu 20/4 kết thúc 5/5 vẫn thuộc tuần 27/4–3/5.
+
 ### Bước 2c. Xác định cột & dữ liệu cần dùng
 
 Sau khi drop, xác định:
@@ -386,8 +434,8 @@ Với mỗi section trong `report["sections"]`, đếm số item và chiều dà
 - 1 slide TOC (slide 2)
 - 1 slide content cho mỗi section chính (slide 3-7 tùy số section)
 - 1 slide pending (slide 9)
-- **1 slide Đánh giá + Định hướng** (áp chót — xem Bước 3c) ⭐
-- 1 slide closing (slide 15 — LUÔN là slide cuối cùng)
+- **1 slide Đánh giá + Định hướng (slide 13 — cards_3col text v3)** ⭐
+- 1 slide closing (slide 16 — LUÔN là slide cuối cùng)
 
 **Tùy chọn** (thêm khi data đủ để có ý nghĩa):
 - Slide 8 / 12 (`image_card_3col`) — khi có 3 dự án trọng điểm có ảnh
@@ -398,7 +446,7 @@ Với mỗi section trong `report["sections"]`, đếm số item và chiều dà
 ### B3b.3 — Cap & quy trình khi vượt cap
 
 - **Sàn:** ≥ 6 slide (cover + TOC + 1 content + pending + đánh giá/định hướng + closing)
-- **Cap mềm:** ≤ 16 slide (15 slide template + 1 slide Đánh giá/Định hướng chèn thêm)
+- **Cap mềm:** ≤ 16 slide (template v3 có 16 slide gốc — xài hết template là vừa)
 - **Tỷ lệ vàng:** 60-70% là content slide chính, 20% slide phụ (table, chart, timeline, image), 10-20% slide đặc biệt (cover/TOC/pending/đánh giá/closing)
 
 **Quy trình tách slide theo cap:**
@@ -605,31 +653,90 @@ Ví dụ output:
 }
 ```
 
-### B3c.4 — Render slide (layout 2 cột)
+### B3c.4 — Render slide (slide 13: cards_3col text — DÀNH RIÊNG cho Đánh giá+Định hướng)
 
-Slide này dùng layout `cards_2col` (chèn mới — KHÔNG có sẵn trong template gốc 15 slide). Cách build:
+**Template v3 (16-slide, May 2026)** đã thêm **slide 13** là layout `cards_3col` thuần text — DÀNH RIÊNG cho Đánh giá+Định hướng. Đây là layout chuẩn, không cần hack hoặc resize.
 
-**Cách lai (khuyến nghị)**: duplicate slide 5 (`cards_3col`) rồi xóa cột 3 + adjust width. Hoặc duplicate slide 9 (Pending — đã có 4 ô vuông) rồi reshape thành 2 ô lớn.
+So với slide 12 cũ (image_card_3col):
+- ✅ KHÔNG có ảnh trên đầu chiếm chỗ
+- ✅ Body box **5.07" × 2.73"** (gấp ~2× slide 12: 5.49" × 1.42") — chứa được 4-5 bullet
+- ✅ Title full-width 18.54" — không bị logo che
+- ✅ Có Group cards bao quanh từng cột làm rõ ranh giới
 
+**Mapping shape ĐÚNG cho slide 13** (verify bằng `debug_slide_shapes(prs, 12)`):
+
+| Vị trí | Shape | Tọa độ (inch) |
+|---|---|---|
+| Title slide | `TextBox 14` | (0.90, 1.92) w=18.54 h=1.06 |
+| Card 1 — header | `TextBox 15` | (1.29, 4.22) w=5.07 h=0.59 |
+| Card 1 — body | `TextBox 12` | (1.34, 6.24) w=5.07 **h=2.73** |
+| Card 2 — header | `TextBox 16` | (7.66, 4.22) w=5.07 h=0.59 |
+| Card 2 — body | `TextBox 13` | (7.63, 6.24) w=5.07 **h=2.73** |
+| Card 3 — header | `TextBox 18` | (13.92, 4.22) w=5.07 h=0.59 |
+| Card 3 — body | `TextBox 17` | (13.97, 6.24) w=5.07 **h=2.73** |
+
+⚠️ **PATTERN INTERLEAVED — KHÔNG ĐƯỢC NHẦM:**
+- Header dùng index `15, 16, 18` (skip 17)
+- Body dùng index `12, 13, 17`
+- Cặp header+body của cùng card: (15+12), (16+13), (18+17) — **không liên tiếp** như slide cũ
+
+**Strategy gán nội dung 3 card**:
+- **Card 1**: ĐIỂM TỐT (gộp 2-3 bullet positives, header NAVY)
+- **Card 2**: CẦN CẢI THIỆN (gộp 2-3 bullet pending, header ĐỎ)
+- **Card 3**: ĐỊNH HƯỚNG (gộp 3-4 bullet direction, header NAVY)
+
+**Quirks slide 13** (verify May 2026):
+1. **Header card width 5.07"** → max ~25 ký tự để không wrap. Dùng "ĐIỂM TỐT" / "CẦN CẢI THIỆN" / "ĐỊNH HƯỚNG TUẦN N+1/Tx" — đều OK.
+2. **Body box height 2.73"** → chứa khoảng 6-8 dòng text Pt(11-12). KHÔNG cần resize như slide 12 cũ. Mỗi card chứa được 3-5 bullet gộp bằng " | ".
+3. **Title full-width** → max ~50 ký tự. Vẫn nên `shrink_title(slide, "TextBox 14", max_chars=50, small_size=36)` cho an toàn.
+4. **Tránh dùng `\n` trong body** — slide 13 textbox không tự xuống dòng đẹp với `\n`. Format gộp: `f"{label1}: {body1} | {label2}: {body2}"`.
+
+**Code mẫu hoàn chỉnh** (copy-paste được):
 ```python
-# Khuyến nghị: duplicate slide 5 và remap
-new_slide = duplicate_slide(prs, source_idx=4)  # slide 5 (0-indexed = 4)
-# Xóa shapes cột 3 (TextBox phía phải nhất)
-# Resize cột 1 → trái-50%, cột 2 → phải-50%
-# Set title section "ĐÁNH GIÁ KỲ & ĐỊNH HƯỚNG …"
-# Đổ assessment.items vào cột trái (mỗi item = 1 sub-card)
-# Đổ direction.items vào cột phải
-# Force màu label theo is_pending (Bước 2b-bis)
+s13 = prs.slides[12]  # slide 13 (0-indexed = 12)
+shrink_title(s13, "TextBox 14", max_chars=50, small_size=36)
+replace_shape_by_name(s13, "TextBox 14", f"ĐÁNH GIÁ KỲ & ĐỊNH HƯỚNG {PERIOD_NEXT}")
+
+positives = [a for a in ASSESSMENT_ITEMS if not a["is_pending"]]
+neg = [a for a in ASSESSMENT_ITEMS if a["is_pending"]]
+
+# Card 1 — Điểm tốt (header NAVY)
+replace_shape_by_name(s13, "TextBox 15", "ĐIỂM TỐT")  # header
+body_pos = " | ".join(f"{a['label']}: {a['body']}" for a in positives)
+replace_shape_by_name(s13, "TextBox 12", body_pos)    # body
+force_header_color(s13, "TextBox 15", is_pending=False)
+
+# Card 2 — Cần cải thiện (header ĐỎ)
+replace_shape_by_name(s13, "TextBox 16", "CẦN CẢI THIỆN")  # header
+body_neg = " | ".join(f"{a['label']}: {a['body']}" for a in neg)
+replace_shape_by_name(s13, "TextBox 13", body_neg)         # body
+force_header_color(s13, "TextBox 16", is_pending=True)
+
+# Card 3 — Định hướng (header NAVY)
+replace_shape_by_name(s13, "TextBox 18", f"ĐỊNH HƯỚNG {PERIOD_NEXT}")  # header
+body_dir = " | ".join(f"{d['label']}: {d['body']}" for d in DIRECTION_ITEMS)
+replace_shape_by_name(s13, "TextBox 17", body_dir)                      # body
+force_header_color(s13, "TextBox 18", is_pending=False)
 ```
 
-**Vị trí chèn**: ngay TRƯỚC slide closing (slide cuối cùng). Sau khi build xong tất cả slide khác, dùng:
-```python
-# Move slide vừa tạo lên vị trí (số slide hiện tại - 1)
-# Slide closing phải LUÔN là slide cuối
-move_slide(prs, source_idx=len(prs.slides)-1, target_idx=len(prs.slides)-2)
-```
+**Vị trí slide 13 trong deck** (template v3, 16 slide):
 
-Code chi tiết + helper `move_slide()` xem bổ sung tại `references/building-blocks.md` (cần tạo thêm helper khi gặp lần đầu).
+| # | Slide |
+|---|---|
+| 1 | Cover |
+| 2 | TOC |
+| 3-7 | Content sections |
+| 8 | (free — có thể dùng cho Pending hoặc image_card section) |
+| 9 | Pending — Tồn đọng & Trọng tâm |
+| 10 | Timeline (optional) |
+| 11 | Table tổng hợp |
+| 12 | image_card_3col (3 ảnh + 3 cards — dành cho hoạt động khác) |
+| **13** | **cards_3col text — Đánh giá+Định hướng** ⭐ |
+| 14 | Chart 1 (donut) — optional |
+| 15 | Chart 2 (bar) — optional |
+| 16 | Closing — Trân trọng kính chào |
+
+Slide 16 LUÔN là cuối. Slide 13 nằm áp chót về mặt content (sau khi xóa các chart 14/15 không dùng).
 
 ### B3c.5 — Khi nào ĐƯỢC bỏ qua slide này?
 
@@ -722,13 +829,31 @@ debug_slide_shapes(prs)  # CHẠY TRƯỚC khi sửa
 **Các quirks quan trọng** (xem chi tiết tại `references/edit-template.md`):
 1. Mỗi dòng text là 1 shape riêng → match theo `shape.name`
 2. Cover (slide 1): mỗi dòng là 1 paragraph riêng — dùng `replace_cover_period()` để replace từng paragraph (không hack `<a:br/>` như v1)
-3. **Title đa dòng có thể đè body bên dưới** — dùng `shrink_title_if_long()` cho slide 2, 6, 9, 12
-4. Header card width cố định → ≤ 20 ký tự (3-cột) / ≤ 16 ký tự (4-cột)
-5. Slide 4 timeline header ≤ 20 ký tự (tránh wrap)
-6. Slide 6 body cột trái ≤ 90 ký tự (image che)
+3. **Title đa dòng có thể đè body bên dưới** — dùng `shrink_title_if_long()` cho slide 2, 6, 9, 11, 12
+4. **Header card width cố định — bảng giới hạn ký tự THẬT** (đã verify May 2026):
+
+| Slide | Loại | Max chars header | Ghi chú |
+|---|---|---|---|
+| 2 (TOC) | TOC card | **≤ 18** | Vượt → wrap 2 dòng đè body description |
+| 3 (icon_rows) | Header item | ≤ 25 | Width rộng |
+| 4 (zigzag 4-col) | Header item | **≤ 14** | Width hẹp nhất, hay wrap |
+| 5 (cards_3col) | Header card | ≤ 22 | OK |
+| 6 (image+cards) | Header card 1 (left, có image) | **≤ 12** | Width hẹp; card 1 ngay dưới title, hay đè body |
+| 6 (image+cards) | Header card 2,3 (right) | ≤ 22 | Width rộng hơn |
+| 9 (pending 4-col) | Header item | ≤ 22 | OK |
+| 11 (table) | Title slide | **≤ 30** | Vượt → đè logo Tôn Đông Á góc phải |
+| 12 (image_card_3col, dùng cho HOẠT ĐỘNG KHÁC) | Header card | **≤ 12** | Width hẹp; KHÔNG dùng cho Đánh giá+Định hướng — body box quá nhỏ |
+| **13 (cards_3col text — DÀNH RIÊNG cho Đánh giá+Định hướng)** | **Header card** | **≤ 25** | **Body box rộng 5.07"×2.73" — không cần resize. Pattern shape interleaved (xem Bước 3c.4)** |
+| 13 | Title slide | ≤ 50 | Full-width 18.54", an toàn |
+
+5. Slide 4 timeline header ≤ 14 ký tự (tránh wrap)
+6. Slide 6 body cột trái ≤ 90 ký tự (image che); header card 1 ≤ 12 ký tự
 7. Slide 7 header column ≤ 16 ký tự
 8. **Slide 11 (Table) là placeholder** — phải dùng `replace_table_in_slide()` với data thực
 9. **Một số title nằm trong Group** (slide 11/13/14) — mọi helper phải recurse vào Group bằng `_iter_all_shapes()`
+10. **TOC description ngắn** (≤ 100 ký tự) — vượt sẽ wrap 3 dòng và đè card 1 phía dưới
+11. **Slide 12 (image_card_3col)** chỉ dùng cho HOẠT ĐỘNG KHÁC / project showcase — body box quá nhỏ (1.42"), KHÔNG dùng cho Đánh giá+Định hướng
+12. **Slide 13 (cards_3col text)** mới là layout DÀNH RIÊNG cho Đánh giá+Định hướng — body box 2.73", chứa được 4-5 bullet, không cần resize. Mapping shape INTERLEAVED (15+12, 16+13, 18+17), không liên tiếp như slide 12 cũ
 
 Template `scripts/build_example.py` có đầy đủ helper functions copy-paste được, đã áp dụng các quirk trên.
 
@@ -785,11 +910,18 @@ Xem lại từng slide bằng `view` tool. Kiểm tra:
 - [ ] Ngày tháng, kỳ báo cáo đã điền đúng (không còn "tháng 10/2025" nếu user yêu cầu tháng 11)
 - [ ] Slide table (nếu có): không còn placeholder "Column 1 / content / page heading"
 - [ ] Slide chart (nếu có): data đã thay, không còn "Sales / 1st Qtr / 2nd Qtr"
-- [ ] **Slide Đánh giá + Định hướng (áp chót) phải có mặt**, ngay TRƯỚC slide closing
-- [ ] **Cột TRÁI** = Đánh giá kỳ vừa qua (3-5 bullet), có ít nhất 1 bullet "cần cải thiện" tô đỏ nếu data có vấn đề
-- [ ] **Cột PHẢI** = Định hướng kỳ tới (3-5 bullet, label NAVY, dùng động từ tương lai)
+- [ ] **Slide 13 (Đánh giá + Định hướng) phải có mặt**, không còn placeholder "Heading for the topic..." / "Main point 1" / "Paragraph 1 that dives..."
+- [ ] **Cột TRÁI (TextBox 15+12)** = Đánh giá điểm tốt (header NAVY)
+- [ ] **Cột GIỮA (TextBox 16+13)** = Cần cải thiện (header **ĐỎ**)
+- [ ] **Cột PHẢI (TextBox 18+17)** = Định hướng kỳ tới (header NAVY)
 - [ ] **Định hướng KHÔNG lặp lại "Trọng tâm" của slide 9** (kiểm tra từng bullet — không có bullet nào trùng nội dung)
 - [ ] Định hướng không có cụm mơ hồ: "tiếp tục theo dõi", "cố gắng hoàn thành", "duy trì như cũ"
+- [ ] **Khi báo cáo TUẦN/NĂM**: KHÔNG còn chữ "THÁNG" sót trong title TOC (slide 2), title pending (slide 9), title table (slide 11). Chạy: `extract-text <file>.pptx \| grep -iE "tháng" ` và verify mọi match đều đúng ngữ cảnh.
+- [ ] **Header card không wrap 2 dòng** — kiểm tra trực quan slide 2, 4, 6, 9, 13. Nếu wrap → rút header theo bảng max-chars ở Bước 5.
+- [ ] **Title slide 11 không đè logo Tôn Đông Á** ở góc phải — nếu đè, dùng `shrink_title(s11, "TextBox 4", max_chars=30, small_size=36)`.
+- [ ] **Body slide 13 không tràn ra ngoài card** — body box đã rộng 2.73" nên hiếm khi tràn; nếu tràn thì cắt bớt 1 bullet (max 3 bullet/card hoặc ~150 ký tự body gộp).
+- [ ] **Slide 16 (closing) là slide cuối cùng** — không có slide nào sau closing
+- [ ] **MAPPING shape slide 13 INTERLEAVED**: header dùng TextBox 15/16/18 (skip 17), body dùng TextBox 12/13/17. Cặp đúng: (15+12), (16+13), (18+17). KHÔNG nhầm với pattern liên tiếp.
 
 **Sửa tối đa 1 vòng.** Lỗi nhỏ về pixel thì bỏ qua.
 
@@ -821,6 +953,26 @@ LibreOffice + pdftoppm đã có sẵn trong môi trường.
 ---
 
 ## Changelog
+
+### v2.3 (May 2026) — Template v3 với slide 13 chuyên cho Đánh giá+Định hướng
+- **THAY TEMPLATE**: từ 15-slide → **16-slide v3**. Khác biệt: chèn slide 13 mới (cards_3col text thuần), đẩy chart 1→14, chart 2→15, closing 15→16. Slide 1-12 giữ nguyên hoàn toàn.
+- **CHUYỂN slide Đánh giá+Định hướng từ slide 12 → slide 13**: slide 13 mới có body box 5.07"×2.73" (gấp ~2× slide 12 cũ là 1.42"), không có ảnh che, KHÔNG cần resize, KHÔNG cần shrink header xuống còn 12 ký tự.
+- **MAPPING SHAPE INTERLEAVED** cho slide 13: header dùng TextBox 15/16/18, body dùng TextBox 12/13/17 — cặp đúng (15+12), (16+13), (18+17). Đây là pattern KHÁC slide 12 cũ (10+11, 12+13, 14+15 liên tiếp).
+- **Slide 12 cũ vẫn giữ** trong template, nhưng giờ chỉ dùng cho HOẠT ĐỘNG KHÁC / project showcase (vì có 3 ảnh trên + cards nhỏ phía dưới).
+- **UPDATE QA**: chỉ định slide 13 cho Đánh giá, slide 16 cho closing. Thêm checklist mapping interleaved.
+- **UPDATE Bước 2b-ter**: title slide đánh giá dùng full string "ĐÁNH GIÁ KỲ & ĐỊNH HƯỚNG TUẦN N+1/Tx" — title slide 13 rộng full-width 18.54", chứa được.
+
+### v2.2 (May 2026) — bài học từ thực tế build báo cáo TUẦN
+- **FIX Bước 3c.4**: Slide Đánh giá+Định hướng dùng **slide 12 template (image_card_3col)**, không duplicate slide 5. Mapping shape ĐÚNG: header+body của cùng card có index liên tiếp (10+11, 12+13, 14+15) — KHÔNG phải xen kẽ.
+- **THÊM Bước 2b-ter**: Quy tắc override "THÁNG" → "TUẦN"/"NĂM" cho slide 1/2/9/11/12 khi báo cáo không phải tháng. Bao gồm code filter dữ liệu theo overlap-week.
+- **FIX bảng max-chars header (Bước 5)**: cập nhật giới hạn ký tự THẬT đã verify:
+  - TOC card (slide 2): 18 (cũ: không quy định)
+  - Slide 4 zigzag: 14 (cũ: 16)
+  - Slide 6 card 1 (có image): 12 (cũ: không quy định)
+  - Slide 11 title: 30 (cũ: không quy định — vượt sẽ đè logo)
+  - Slide 12 header card: 12 (cũ: không quy định)
+- **FIX slide 12 body box**: phải resize từ 1.42" → 2.6" khi dùng cho Đánh giá+Định hướng, nếu không text bị tràn xuống dưới.
+- **THÊM 4 mục QA**: kiểm tra "THÁNG" sót, header wrap, title đè logo, body tràn slide 12.
 
 ### v2.1 (May 2026)
 - **Thêm slide BẮT BUỘC "Đánh giá kỳ + Định hướng kỳ tới"** (áp chót, trước closing) — 1 slide chia 2 cột
