@@ -79,29 +79,7 @@ Kiểm tra người dùng đã cung cấp:
    - Nếu user chọn "Khác — tôi sẽ nhập" → đợi user trả lời tên phòng cụ thể trong message tiếp theo, rồi mới tiếp tục.
    - Có thể tuỳ chỉnh danh sách option theo các phòng phổ biến trong tổ chức user, nhưng **luôn có option "Khác"** để mở.
 
-   **Sau khi đã có tên phòng**, filter dữ liệu theo prefix cột `Loại công việc`:
-   ```python
-   DEPT_PREFIXES = {
-       "CNTT": ["CNTT-", "Phần mềm EOffice"],     # P.CNTT
-       "KT":   ["KT-", "KE-"],                     # P.Kế toán
-       "HCM":  ["HCM-", "HC-"],                    # P.HC-NS
-       "KD":   ["KD-"],                            # P.Kinh doanh
-       "QLK":  ["QLK-"],                           # P.Quản lý kho
-       # ... mở rộng theo nhu cầu
-   }
-
-   GENERIC_TYPES = ["Xử lý công việc quy trình", "Dự án", "Báo Cáo tuần/tháng/quý/năm",
-                    "Xây dựng quy trình, ISO"]  # áp dụng cho mọi phòng
-
-   def filter_by_dept(df, dept_code):
-       prefixes = DEPT_PREFIXES.get(dept_code, [])
-       def matches(loai):
-           if pd.isna(loai): return False
-           if any(loai.startswith(p) for p in prefixes): return True
-           if loai in GENERIC_TYPES: return True
-           return False
-       return df[df["Loại công việc"].apply(matches)].copy()
-   ```
+   **Quan trọng — dữ liệu đã được pre-filter ở phía hệ thống nguồn:** Data export từ hệ thống nội bộ chỉ chứa CV của 1 phòng duy nhất (đã filter sẵn theo phòng tại nguồn). KHÔNG cần lọc lại theo prefix `Loại công việc`. Dùng toàn bộ rows trong DataFrame để phân tích.
 
    **Tên hiển thị trên slide bìa** (đầy đủ, dùng cho `cover.department`):
    ```python
@@ -120,7 +98,7 @@ Ghi lại các thông tin này — sẽ dùng nhiều lần về sau.
 
 ## Bước 1b. Phân nhóm Loại công việc → Sections (generic per phòng)
 
-Sau khi filter dữ liệu theo phòng, gom `Loại công việc` thành 4-5 **section/nhóm logic** để render thành slide A, B, C, D, E. Mỗi phòng có cách gom khác nhau — KHÔNG hard-code mapping CNTT cho phòng khác.
+Gom `Loại công việc` của data thành 4-5 **section/nhóm logic** để render thành slide A, B, C, D, E. Mỗi phòng có cách gom khác nhau — KHÔNG hard-code mapping CNTT cho phòng khác.
 
 **Mapping mặc định cho P.CNTT** (đã chuẩn):
 ```python
@@ -150,9 +128,9 @@ CNTT_GROUPS = {
 ```
 
 **Cho phòng khác**: Khi gặp data của phòng mới, **AUTO-GENERATE mapping** bằng cách:
-1. Lấy danh sách `Loại công việc` unique của phòng đó
+1. Lấy danh sách `Loại công việc` unique trong DataFrame
 2. Gom theo prefix sau dấu `-` đầu tiên (vd `KT-Sổ cái`, `KT-Báo cáo` → nhóm "Sổ sách & Báo cáo")
-3. Gom các generic type (`Xử lý công việc quy trình`, `Dự án`, ...) thành section riêng "Hỗ trợ quy trình"
+3. Gom các loại CV không có prefix phòng (vd `Xử lý công việc quy trình`, `Dự án`, `Báo Cáo tuần/tháng/quý/năm`) thành section riêng "Hỗ trợ quy trình"
 4. Tối đa **5 section** — nếu nhiều hơn, gộp các nhóm ít item lại thành "Khác"
 5. **Hỏi user xác nhận mapping** nếu có ≥ 3 nhóm chưa rõ ngữ cảnh, kèm preview tên section đề xuất.
 
@@ -203,17 +181,13 @@ df = df.drop(columns=existing_drops)
 
 ### Bước 2b. Quy tắc nội dung khi viết slide
 
-**Tuyệt đối KHÔNG** ghi tên người chủ trì, người tạo, người liên quan trong slide output (VD: không viết "A. Ngọ chủ trì", "do anh Quốc thực hiện"). Báo cáo cấp phòng/ban chỉ nói về **công việc, dự án, hệ thống, đơn vị**, không nói về cá nhân.
+**Slide không chứa:**
+- **Tên cá nhân** (chủ trì, người tạo, liên quan). Dùng cụm chung: "đội Hạ tầng", "đội ERP", "P.CNTT", "BP.UDCNTT".
+- **Thời gian thực hiện chi tiết** ("3 ngày 10–13/04", "24h", "7 ngày"). Đây là metadata nội bộ.
 
-Nếu báo cáo cần nhắc đến chủ trì, dùng cụm chung như: "đội Hạ tầng", "đội ERP", "P.CNTT", "BP.UDCNTT" — KHÔNG tên riêng.
+**Slide chỉ nói:** *công việc + trạng thái*. Dùng các cụm "Đã hoàn tất:", "Đang triển khai:", "Chưa hoàn tất —" để diễn tả trạng thái.
 
-**KHÔNG ghi thời gian thực hiện** (như "(24-26/04)", "3 ngày (10-13/04)", "24h", "7 ngày", "22 ngày") trong phần mô tả công việc trên slide. Thời gian là metadata nội bộ, không phải nội dung công việc. Slide chỉ nói **CÔNG VIỆC LÀM GÌ + TRẠNG THÁI** — không cần thời gian. Dùng "Đã hoàn tất:", "Đang triển khai:", "Chưa hoàn tất —" để diễn tả trạng thái.
-
-Ví dụ:
-- ❌ "3 ngày (10-13/04). Đã hoàn tất: xử lý PR tồn lỗi..."
-- ✅ "Đã hoàn tất: xử lý PR tồn lỗi, đảm bảo tính toàn vẹn hệ thống Purchase Request."
-- ❌ "Dự án 7 ngày (17-24/04) — chủ trì A. Sang. Đang trong quá trình..."
-- ✅ "Dự án hạ tầng đang trong quá trình trình duyệt thiết bị, chưa hoàn tất."
+Ví dụ: ❌ *"3 ngày (10-13/04). Đã hoàn tất: xử lý PR tồn lỗi..."* → ✅ *"Đã hoàn tất: xử lý PR tồn lỗi, đảm bảo tính toàn vẹn hệ thống Purchase Request."*
 
 ### Bước 2b-bis. **Đánh dấu trạng thái cho công việc chưa hoàn tất** (BẮT BUỘC)
 
@@ -259,51 +233,18 @@ def force_header_color(slide, shape_name, is_pending: bool):
 
 ### Bước 2b-ter. **Override mặc định "THÁNG" khi báo cáo TUẦN/NĂM** (BẮT BUỘC)
 
-Template v2 được thiết kế cho báo cáo **THÁNG** — text mặc định trên cover, TOC, slide 9, slide 11 đều ghi "THÁNG". Khi user yêu cầu báo cáo TUẦN hoặc NĂM, **phải override các chỗ sau** trước khi render content:
+Template được thiết kế cho báo cáo **THÁNG** — text mặc định "KẾT QUẢ THÁNG…", "TỒN ĐỌNG THÁNG…", "BẢNG TỔNG HỢP THÁNG…" v.v. nằm trên slide 1, 2, 9, 11, 13. Khi user yêu cầu TUẦN/NĂM, scan toàn deck và replace "THÁNG" theo period thực tế:
 
-| Slide | Text gốc | Override khi TUẦN | Override khi NĂM |
-|---|---|---|---|
-| 1 (cover) | "KẾT QUẢ THÁNG …" | "KẾT QUẢ TUẦN N/Tx-yyyy" | "KẾT QUẢ NĂM yyyy" |
-| 1 (cover) | "VÀ KẾ HOẠCH THÁNG …" | "VÀ ĐỊNH HƯỚNG TUẦN N+1/Tx" | "VÀ KẾ HOẠCH NĂM yyyy+1" |
-| 2 (TOC) | "MỤC LỤC: ... TRONG THÁNG" | thay "THÁNG" → "TUẦN" | thay "THÁNG" → "NĂM" |
-| 9 (pending) | "TỒN ĐỌNG & TRỌNG TÂM THÁNG …" | "TỒN ĐỌNG TUẦN N+1/Tx" | "TỒN ĐỌNG QUÝ I/yyyy+1" |
-| 11 (table) | "BẢNG TỔNG HỢP CÔNG VIỆC THÁNG …" | "BẢNG TỔNG HỢP TUẦN N/Tx" | "BẢNG TỔNG HỢP NĂM yyyy" |
-| **13 (đánh giá+định hướng)** | "Heading for the topic..." (placeholder) | "ĐÁNH GIÁ KỲ & ĐỊNH HƯỚNG TUẦN N+1/Tx" | "ĐÁNH GIÁ NĂM yyyy & ĐỊNH HƯỚNG NĂM yyyy+1" |
-
-**Code mẫu cho slide 2**:
 ```python
-# CẦN làm cả replace_text_anywhere VÀ shrink_title sau đó
-replace_text_anywhere(s2, "TRONG THÁNG", "TRONG TUẦN")
-shrink_title(s2, "TextBox 3", max_chars=40, small_size=30)
+# Generic — replace ở mọi slide có chứa "THÁNG"
+for slide in prs.slides:
+    replace_text_anywhere(slide, "THÁNG", actual_keyword)  # "TUẦN" hoặc "NĂM"
+# Sau replace, gọi shrink_title() cho slide 2/9/11/13 nếu title dài hơn template
 ```
 
-**Quy tắc đặt tên kỳ TUẦN** (cho `PERIOD_CURRENT`, `PERIOD_NEXT`):
-- Định dạng: `"Tuần N/Tx-yyyy"` (vd `"Tuần 5/T4-2026"`)
-- Kèm `PERIOD_RANGE` ngày cụ thể: `"27/04 — 03/05/2026"` để dùng trong description
-- Tuần cuối tháng có thể bao trùm sang tháng kế (vd tuần 5/T4 = 27/4–3/5) — ghi rõ trong description, không gò vào 1 tháng.
+**Đặt tên kỳ TUẦN:** `PERIOD_CURRENT = "Tuần N/Tx-yyyy"` (vd `"Tuần 5/T4-2026"`), kèm `PERIOD_RANGE` ngày cụ thể `"27/04 — 03/05/2026"` cho description. Tuần cuối tháng có thể bao trùm sang tháng kế — ghi rõ trong description, không gò vào 1 tháng.
 
-**Quy tắc xác định "Tuần N của tháng X"**:
-- Tuần 1 = tuần chứa ngày 1 của tháng (ISO Mon-Sun)
-- Tuần N = tuần thứ N tính từ tuần 1
-- Tuần cuối = tuần chứa ngày cuối tháng (có thể trùng tuần đầu tháng kế)
-- Khi user nói "tuần 5 tháng 4" mà tháng đó chỉ có 4 tuần ISO → tự suy luận là **tuần cuối tháng** (27/4–3/5 cho tháng 4/2026), KHÔNG hỏi lại.
-
-**Filter dữ liệu theo tuần**:
-```python
-from datetime import datetime
-week_start = datetime(2026, 4, 27)
-week_end = datetime(2026, 5, 3, 23, 59, 59)
-
-def overlap_week(row):
-    s, e = row["Từ ngày"], row["Đến ngày"]
-    if pd.isna(s) and pd.isna(e): return False
-    if pd.isna(e): e = s
-    if pd.isna(s): s = e
-    return not (e < week_start or s > week_end)
-
-df_week = df[df.apply(overlap_week, axis=1)].copy()
-```
-**Quan trọng**: dùng overlap (CV có thời gian giao với tuần), không phải containment. CV bắt đầu 20/4 kết thúc 5/5 vẫn thuộc tuần 27/4–3/5.
+**Filter dữ liệu theo tuần** dùng **overlap** (CV có thời gian giao với tuần), không phải containment. CV bắt đầu 20/4 kết thúc 5/5 vẫn thuộc tuần 27/4–3/5. Code mẫu `overlap_week()` + quy tắc xác định "Tuần N của tháng X": xem `references/edit-template.md`.
 
 ### Bước 2c. Xác định cột & dữ liệu cần dùng
 
@@ -654,36 +595,28 @@ def debug_slide_shapes(prs, slide_idx=None):
 debug_slide_shapes(prs)  # CHẠY TRƯỚC khi sửa
 ```
 
-**Các quirks quan trọng** (xem chi tiết tại `references/edit-template.md`):
-1. Mỗi dòng text là 1 shape riêng → match theo `shape.name`
-2. Cover (slide 1): mỗi dòng là 1 paragraph riêng — dùng `replace_cover_period()` để replace từng paragraph (không hack `<a:br/>` như v1)
-3. **Title đa dòng có thể đè body bên dưới** — dùng `shrink_title_if_long()` cho slide 2, 6, 9, 11, 12
-4. **Header card width cố định — bảng giới hạn ký tự THẬT** (đã verify May 2026):
+**Các quirks quan trọng:** Template được xuất từ Gamma.app — mỗi dòng text là 1 shape riêng (`TextBox 3`, `TextBox 4`...), KHÔNG phải paragraph trong cùng textbox. Một số title nằm trong Group (slide 11/13/14) — mọi helper phải recurse vào Group. Slide 11 (table) là placeholder — phải dùng `replace_table_in_slide()` với data thực. Slide 1 (cover) mỗi dòng là paragraph riêng — dùng `replace_cover_period()`. Title đa dòng có thể đè body — dùng `shrink_title_if_long()` cho slide 2, 6, 9, 11.
 
-| Slide | Loại | Max chars header | Ghi chú |
+**Bảng giới hạn ký tự header (đã verify):**
+
+| Slide | Loại | Max chars | Ghi chú |
 |---|---|---|---|
 | 2 (TOC) | TOC card | **≤ 18** | Vượt → wrap 2 dòng đè body description |
 | 3 (icon_rows) | Header item | ≤ 25 | Width rộng |
 | 4 (zigzag 4-col) | Header item | **≤ 14** | Width hẹp nhất, hay wrap |
 | 5 (cards_3col) | Header card | ≤ 22 | OK |
-| 6 (image+cards) | Header card 1 (left, có image) | **≤ 12** | Width hẹp; card 1 ngay dưới title, hay đè body |
-| 6 (image+cards) | Header card 2,3 (right) | ≤ 22 | Width rộng hơn |
+| 6 (image+cards) | Header card 1 (có image) | **≤ 12** | Card 1 ngay dưới title, hay đè body |
+| 6 (image+cards) | Header card 2,3 | ≤ 22 | Width rộng hơn |
+| 6 | Body cột trái | ≤ 90 ký tự | Image che bên phải |
+| 7 | Header column | ≤ 16 | |
 | 9 (pending 4-col) | Header item | ≤ 22 | OK |
 | 11 (table) | Title slide | **≤ 30** | Vượt → đè logo Tôn Đông Á góc phải |
-| 12 (image_card_3col, dùng cho HOẠT ĐỘNG KHÁC) | Header card | **≤ 12** | Width hẹp; KHÔNG dùng cho Đánh giá+Định hướng — body box quá nhỏ |
-| **13 (cards_3col text — DÀNH RIÊNG cho Đánh giá+Định hướng)** | **Header card** | **≤ 25** | **Body box rộng 5.07"×2.73" — không cần resize. Pattern shape interleaved (xem Bước 3c.4)** |
+| 12 (image_card_3col) | Header card | **≤ 12** | KHÔNG dùng cho Đánh giá+Định hướng — body box quá nhỏ (1.42") |
+| **13 (cards_3col text)** | **Header card** | **≤ 25** | DÀNH RIÊNG cho Đánh giá+Định hướng. Body 5.07"×2.73", không cần resize. Mapping interleaved (15+12, 16+13, 18+17) — xem Bước 3c |
 | 13 | Title slide | ≤ 50 | Full-width 18.54", an toàn |
+| 2 (TOC) | Description | ≤ 100 ký tự | Vượt → wrap 3 dòng đè card 1 |
 
-5. Slide 4 timeline header ≤ 14 ký tự (tránh wrap)
-6. Slide 6 body cột trái ≤ 90 ký tự (image che); header card 1 ≤ 12 ký tự
-7. Slide 7 header column ≤ 16 ký tự
-8. **Slide 11 (Table) là placeholder** — phải dùng `replace_table_in_slide()` với data thực
-9. **Một số title nằm trong Group** (slide 11/13/14) — mọi helper phải recurse vào Group bằng `_iter_all_shapes()`
-10. **TOC description ngắn** (≤ 100 ký tự) — vượt sẽ wrap 3 dòng và đè card 1 phía dưới
-11. **Slide 12 (image_card_3col)** chỉ dùng cho HOẠT ĐỘNG KHÁC / project showcase — body box quá nhỏ (1.42"), KHÔNG dùng cho Đánh giá+Định hướng
-12. **Slide 13 (cards_3col text)** mới là layout DÀNH RIÊNG cho Đánh giá+Định hướng — body box 2.73", chứa được 4-5 bullet, không cần resize. Mapping shape INTERLEAVED (15+12, 16+13, 18+17), không liên tiếp như slide 12 cũ
-
-Template `scripts/build_example.py` có đầy đủ helper functions copy-paste được, đã áp dụng các quirk trên.
+**12 quirks chi tiết kèm code fix + helper functions:** xem `references/edit-template.md` và `references/building-blocks.md`. Script copy-paste được: `scripts/build_example.py`.
 
 **Xóa slide không dùng** (vd: nếu không có nội dung CĐS/AI → xóa slide D, không có chart → xóa slide 13/14):
 ```python
@@ -713,13 +646,11 @@ Lưu file cuối cùng vào `/mnt/user-data/outputs/` với tên mô tả đầy
 Sau khi tạo xong, **luôn** chạy QA:
 
 ```bash
-# 1. Text check
+# 1. Text check + check placeholder còn sót
 extract-text /mnt/user-data/outputs/<file>.pptx
+extract-text /mnt/user-data/outputs/<file>.pptx | grep -iE "lorem|column 1|content|page heading|TODO|\bx{3,}\b|\[insert|heading for|main point|paragraph 1"
 
-# 2. Check placeholder còn sót
-extract-text /mnt/user-data/outputs/<file>.pptx | grep -iE "lorem|column 1|content|page heading|TODO|\bx{3,}\b|\[insert"
-
-# 3. Visual check
+# 2. Visual check
 cd /home/claude
 python /mnt/skills/public/pptx/scripts/office/soffice.py --headless --convert-to pdf /mnt/user-data/outputs/<file>.pptx
 rm -f slide-*.jpg
@@ -727,29 +658,17 @@ pdftoppm -jpeg -r 100 <file>.pdf slide
 ls -1 "$PWD"/slide-*.jpg
 ```
 
-Xem lại từng slide bằng `view` tool. Kiểm tra:
-- [ ] Logo Tôn Đông Á ở góc phải trên MỖI slide (đã embed sẵn — chỉ verify còn nguyên)
-- [ ] Footer URL `tondonga.com.vn` chỉ ở slide 1 cover
-- [ ] Font Inter (hoặc fallback Open Sans), title ≥ 36pt, body 14–16pt
-- [ ] Không text tràn khỏi box, không title 2 dòng đè body (quirk 3, 4, 5)
-- [ ] Không chồng chéo (overlap) header card với description
-- [ ] Màu đỏ `FF0000` cho title section, navy `000099` cho header card, **đỏ ≠ navy** đúng theo trạng thái pending/done
-- [ ] Tiếng Việt có dấu, không lỗi font (ô vuông, "???")
-- [ ] Ngày tháng, kỳ báo cáo đã điền đúng (không còn "tháng 10/2025" nếu user yêu cầu tháng 11)
-- [ ] Slide table (nếu có): không còn placeholder "Column 1 / content / page heading"
-- [ ] Slide chart (nếu có): data đã thay, không còn "Sales / 1st Qtr / 2nd Qtr"
-- [ ] **Slide 13 (Đánh giá + Định hướng) phải có mặt**, không còn placeholder "Heading for the topic..." / "Main point 1" / "Paragraph 1 that dives..."
-- [ ] **Cột TRÁI (TextBox 15+12)** = Đánh giá điểm tốt (header NAVY)
-- [ ] **Cột GIỮA (TextBox 16+13)** = Cần cải thiện (header **ĐỎ**)
-- [ ] **Cột PHẢI (TextBox 18+17)** = Định hướng kỳ tới (header NAVY)
-- [ ] **Định hướng KHÔNG lặp lại "Trọng tâm" của slide 9** (kiểm tra từng bullet — không có bullet nào trùng nội dung)
-- [ ] Định hướng không có cụm mơ hồ: "tiếp tục theo dõi", "cố gắng hoàn thành", "duy trì như cũ"
-- [ ] **Khi báo cáo TUẦN/NĂM**: KHÔNG còn chữ "THÁNG" sót trong title TOC (slide 2), title pending (slide 9), title table (slide 11). Chạy: `extract-text <file>.pptx \| grep -iE "tháng" ` và verify mọi match đều đúng ngữ cảnh.
-- [ ] **Header card không wrap 2 dòng** — kiểm tra trực quan slide 2, 4, 6, 9, 13. Nếu wrap → rút header theo bảng max-chars ở Bước 5.
-- [ ] **Title slide 11 không đè logo Tôn Đông Á** ở góc phải — nếu đè, dùng `shrink_title(s11, "TextBox 4", max_chars=30, small_size=36)`.
-- [ ] **Body slide 13 không tràn ra ngoài card** — body box đã rộng 2.73" nên hiếm khi tràn; nếu tràn thì cắt bớt 1 bullet (max 3 bullet/card hoặc ~150 ký tự body gộp).
-- [ ] **Slide 16 (closing) là slide cuối cùng** — không có slide nào sau closing
-- [ ] **MAPPING shape slide 13 INTERLEAVED**: header dùng TextBox 15/16/18 (skip 17), body dùng TextBox 12/13/17. Cặp đúng: (15+12), (16+13), (18+17). KHÔNG nhầm với pattern liên tiếp.
+Xem từng slide bằng `view` tool, check theo 5 nhóm:
+
+**1. Brand bất biến:** Logo TDA góc phải MỌI slide, footer `tondonga.com.vn` chỉ ở slide 1, font Inter (fallback Open Sans), title ≥ 36pt + body 14–16pt, slide size 20×11.25". Màu đỏ `#FF0000` cho title section, navy `#000099` cho header card.
+
+**2. Content & placeholder:** Tiếng Việt có dấu, không lỗi font (ô vuông / "???"). Không placeholder sót ("lorem", "Column 1", "Heading for", "Main point", "Paragraph 1", "Sales / 1st Qtr"). Slide table dùng data thực, slide chart đã thay data.
+
+**3. Period đúng kỳ:** Ngày tháng/kỳ báo cáo đã điền đúng. Khi báo cáo TUẦN/NĂM: KHÔNG còn "THÁNG" sót — chạy `extract-text <file>.pptx | grep -i "tháng"` và verify mọi match đúng ngữ cảnh.
+
+**4. Slide bắt buộc:** Slide 13 (Đánh giá + Định hướng) có mặt với mapping interleaved đúng — Card trái `15+12` ĐIỂM TỐT (NAVY), Card giữa `16+13` CẦN CẢI THIỆN (ĐỎ), Card phải `18+17` ĐỊNH HƯỚNG (NAVY). Định hướng KHÔNG lặp "Trọng tâm" của slide 9, không cụm mơ hồ ("tiếp tục theo dõi", "cố gắng", "duy trì như cũ"). Slide 16 (closing) là slide cuối cùng.
+
+**5. Layout không lỗi:** Header card không wrap 2 dòng (kiểm tra slide 2, 4, 6, 9, 13 — nếu wrap, rút theo bảng max-chars Bước 5). Title slide 11 không đè logo (≤ 30 ký tự, hoặc `shrink_title(s11, "TextBox 4", max_chars=30, small_size=36)`). Body slide 13 không tràn card (≤ 3 bullet/card, ~150 ký tự gộp). Không text tràn box, không title đè body, không overlap header với description.
 
 **Sửa tối đa 1 vòng.** Lỗi nhỏ về pixel thì bỏ qua.
 
@@ -763,12 +682,12 @@ Cuối cùng, dùng `present_files` với đường dẫn file `.pptx` đã lưu
 
 ## Reference files
 
-- `references/design-tokens.md` — Bộ màu, font, size, spacing chính thức v2
-- `references/edit-template.md` — **Chi tiết cách sửa template + 8 quirks quan trọng + 15-slide map**
-- `references/layout-patterns.md` — **Pattern library 7 layout content slide** (Bước 3b), bao gồm `data_table` mới
-- `references/building-blocks.md` — Helper functions chuẩn (replace_cover_period, replace_table_in_slide, replace_chart_data, force_header_color, ...)
-- `scripts/build_example.py` — **Script mẫu copy-paste được**, đã áp dụng đúng Bước 2a/2b/2d/3b
-- `assets/template/report-template.pptx` — File template gốc v2 (15 slide, 20×11.25in, đã embed logo + footer)
+- `references/design-tokens.md` — Bộ màu, font, size, spacing chính thức
+- `references/edit-template.md` — Chi tiết cách sửa template + quirks + slide map
+- `references/layout-patterns.md` — Pattern library 7 layout content slide (Bước 3b), bao gồm `data_table`
+- `references/building-blocks.md` — Helper functions chuẩn (`replace_cover_period`, `replace_table_in_slide`, `replace_chart_data`, `force_header_color`, ...)
+- `scripts/build_example.py` — Script mẫu copy-paste được, đã áp dụng đúng các bước
+- `assets/template/report-template.pptx` — Template gốc v3 (16 slide, 20×11.25in, embed logo + footer)
 
 ## Phụ thuộc
 
@@ -777,9 +696,3 @@ pip install python-pptx pandas openpyxl --break-system-packages
 ```
 
 LibreOffice + pdftoppm đã có sẵn trong môi trường.
-
----
-
-## Changelog
-
-**v2.3 (current)** — Template v3, 16 slide, slide 13 dành riêng cho Đánh giá+Định hướng (cards_3col text thuần, body box 2.73", mapping shape interleaved 15+12 / 16+13 / 18+17).

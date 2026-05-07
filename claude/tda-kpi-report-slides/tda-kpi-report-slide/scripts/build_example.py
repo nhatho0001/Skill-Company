@@ -72,32 +72,13 @@ COLUMNS_TO_DROP = [
     "Người hủy", "Ngày hủy", "Người hoàn tất", "Ngày Ticket liên quan"
 ]
 
-DEPT_PREFIXES = {
-    "CNTT": ["CNTT-", "Phần mềm EOffice"],
-    "KT":   ["KT-", "KE-"],
-    "HCM":  ["HCM-", "HC-"],
-    "KD":   ["KD-"],
-    "QLK":  ["QLK-"],
-}
-GENERIC_TYPES = ["Xử lý công việc quy trình", "Dự án",
-                 "Báo Cáo tuần/tháng/quý/năm", "Xây dựng quy trình, ISO"]
-
-
-def filter_by_dept(df, dept_code):
-    prefixes = DEPT_PREFIXES.get(dept_code, [])
-    def matches(loai):
-        if pd.isna(loai): return False
-        if any(str(loai).startswith(p) for p in prefixes): return True
-        if loai in GENERIC_TYPES: return True
-        return False
-    return df[df["Loại công việc"].apply(matches)].copy()
-
+# LƯU Ý: Data export từ hệ thống nội bộ đã được pre-filter theo phòng ở phía nguồn
+# → KHÔNG cần lọc lại theo prefix Loại công việc. Dùng toàn bộ rows.
 
 df = pd.read_excel(INPUT_FILE)
 existing_drops = [c for c in COLUMNS_TO_DROP if c in df.columns]
 df = df.drop(columns=existing_drops)
-df = filter_by_dept(df, DEPT_CODE)
-print(f"✓ Drop {len(existing_drops)} cột nhiễu. Filter dept '{DEPT_CODE}': {len(df)} rows")
+print(f"✓ Drop {len(existing_drops)} cột nhiễu. Tổng: {len(df)} rows (data đã pre-filter theo P.{DEPT_CODE})")
 
 
 # ============================================================
