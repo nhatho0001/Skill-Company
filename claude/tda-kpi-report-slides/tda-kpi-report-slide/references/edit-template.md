@@ -151,11 +151,13 @@ Slide 7 có 4 column nhỏ (mỗi cột rộng 4.17", body cao 1.58-2.08"). Mỗ
 
 Slide 11 có sẵn 1 `Table 5` (3 cols × 4 rows) với placeholder "Column 1 / content". **Khi user có dữ liệu bảng, phải xóa table cũ và add lại** với số col/row khớp dữ liệu.
 
+**⚠️ v3.1 update:** Template mới dùng font size **24pt cho cả header và body** cell (thay vì 22pt header + 20pt body như v3.0). Khi build lại table, áp dụng đúng size mới để giữ đồng bộ visual với phần còn lại của template. Row height auto cũng phải tăng theo (0.55" mỗi body row thay vì 0.5").
+
 **Cách build lại table dynamic** (xem đầy đủ trong `layout-patterns.md` Pattern `data_table`):
 
 ```python
-def replace_table(slide, headers, rows):
-    """Xóa table cũ trên slide, thêm table mới với headers + rows."""
+def replace_table(slide, headers, rows, header_size=24, body_size=24):
+    """Xóa table cũ trên slide, thêm table mới với headers + rows. v3.1: 24pt."""
     # 1. Tìm và xóa table cũ
     for shape in list(slide.shapes):
         if shape.has_table:
@@ -166,15 +168,15 @@ def replace_table(slide, headers, rows):
     # 2. Add table mới (giữ position cũ ~ 2.25, 3.38 và size 14.42 x 4.08)
     from pptx.util import Inches
     n_rows, n_cols = len(rows) + 1, len(headers)
-    # Auto-tính height theo số rows: 0.6" header + 0.5" mỗi body row, max 7.5"
-    h = min(0.6 + 0.5 * len(rows), 7.5)
+    # Auto-tính height: 0.8" header + 0.55" mỗi body row (24pt cao hơn 20pt)
+    h = min(0.8 + 0.55 * len(rows), 7.5)
     tbl_shape = slide.shapes.add_table(
         n_rows, n_cols,
         Inches(2.25), Inches(3.38),
         Inches(14.42), Inches(h)
     )
-    # 3. Style + fill cells
-    style_table(tbl_shape.table, headers, rows)  # xem layout-patterns.md
+    # 3. Style + fill cells (header_size=24, body_size=24)
+    style_table(tbl_shape.table, headers, rows, header_size, body_size)  # xem layout-patterns.md
 ```
 
 ### Quirk 9: Một số title/subtitle nằm TRONG Group → phải recurse

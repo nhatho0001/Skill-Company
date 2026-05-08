@@ -45,36 +45,46 @@ Helper `set_text()`, `add_title()` xem `building-blocks.md`.
 
 **Khi dùng:** 4–6 item, body 1-2 dòng, không quá quan trọng visual.
 
-**Layout chuẩn template (Slide 3 hiện tại):** Title đỏ trên, body bên trái với header navy + body đen, ảnh lớn bên phải (5"x5"). Mỗi item là 2 textbox liền kề.
+**Layout chuẩn template v3.1 (Slide 3 hiện tại — đã giãn cách):** Title đỏ trên, body bên trái với header navy + body đen, ảnh lớn bên phải (5"x5"). Mỗi item là 2 textbox liền kề.
 
-**Khi build từ scratch:**
+**Cập nhật v3.1 (so với v3.0):**
+- Item đầu tiên bắt đầu ở `T=2.33"` (cũ: T=1.91") — giãn xuống thoáng hơn dưới title
+- Body height tăng `0.67"` (cũ: 0.53") — chứa thoải mái body 2 dòng ở size 14pt
+- Header height `0.29"` (cũ: 0.27") — gần như giữ nguyên
+- Item gap vẫn `1.31"` — nhịp dọc đều giữa các item
+
+**Khi build từ scratch (v3.1 dimensions):**
 ```python
 def build_icon_rows(slide, title, items, image_path=None):
     """items: list of {"header": str, "body": str}"""
     # Title đỏ
-    title_box = slide.shapes.add_textbox(Inches(0.86), Inches(0.66), Inches(11), Inches(0.9))
-    set_text(title_box.text_frame, title, size=40, bold=True, color=RED_PRIMARY)
+    title_box = slide.shapes.add_textbox(Inches(0.86), Inches(0.66), Inches(11), Inches(0.58))
+    set_text(title_box.text_frame, title, size=30.62, bold=True, color=RED_PRIMARY)
 
-    # Items - left side (text)
-    y = Inches(1.91)
+    # Items - left side (text) - v3.1 layout (giãn cách)
+    y = Inches(2.33)              # ⬆ start lùi xuống (cũ 1.91)
     text_w = Inches(10.88)
     for it in items[:6]:
-        # Header navy bold
-        head_box = slide.shapes.add_textbox(Inches(1.43), y, text_w, Inches(0.27))
-        set_text(head_box.text_frame, it["header"], size=18, bold=True, color=NAVY)
+        # Header navy bold (24pt)
+        head_box = slide.shapes.add_textbox(Inches(1.46), y, text_w, Inches(0.29))
+        set_text(head_box.text_frame, it["header"], size=24, bold=True, color=NAVY)
 
-        # Body
-        body_box = slide.shapes.add_textbox(Inches(1.43), y + Inches(0.47),
-                                            text_w, Inches(0.53))
-        set_text(body_box.text_frame, it["body"], size=14, color=BLACK)
+        # Body (20pt, height 0.67" cho 2 dòng)
+        body_box = slide.shapes.add_textbox(Inches(1.46), y + Inches(0.31),
+                                            text_w, Inches(0.67))   # ⬆ height
+        set_text(body_box.text_frame, it["body"], size=20, color=NAVY)
 
         y += Inches(1.31)
 
-    # Right side image (optional, 5x5 inch)
+    # Right side image (optional, ~5x5 inch) - giữ nguyên
     if image_path:
         slide.shapes.add_picture(image_path,
             Inches(13.02), Inches(2.19), Inches(4.94), Inches(4.94))
 ```
+
+**Quy tắc text length cho v3.1 (Pattern 1):**
+- Header: ≤ 28 ký tự (1 dòng, không wrap)
+- Body: ≤ 150 ký tự cho 2 dòng (size 20pt, width 10.88") — vượt 150 sẽ tràn xuống item tiếp theo
 
 **Khi pending/đang xử lý:** Tô header sang `RED_PRIMARY` (xem Bước 2b-bis trong SKILL.md).
 
@@ -196,7 +206,9 @@ def build_numbered_zigzag_4(slide, title, intro, items):
 - So sánh ≥ 3 cột metric (kế hoạch vs thực tế, KPI ngang theo phòng/đơn vị)
 - User yêu cầu rõ ràng "làm bảng" / "so sánh dạng bảng"
 
-**Layout chuẩn template (Slide 11):** Tựa đề đỏ + intro xanh + bảng full-width có header xanh `#4472C4`, body alternating xám đậm/xám nhạt, chữ đen bold.
+**Layout chuẩn template v3.1 (Slide 11):** Tựa đề đỏ + intro xanh + bảng full-width có header xanh `#4472C4`, body alternating xám đậm/xám nhạt, chữ đen bold.
+
+**Cập nhật v3.1 (so với v3.0):** Font size cell **đồng bộ lên 24pt** cho cả header lẫn body (cũ: header 22pt + body 20pt). Slide 20" rộng → 24pt vẫn vừa với 3-5 cột text ngắn. Khi text dài hoặc 6+ cột, vẫn giảm về 18-20pt manual.
 
 **Số columns / rows quyết định bởi DỮ LIỆU**, không cố định 3×4 như placeholder.
 
@@ -204,11 +216,13 @@ def build_numbered_zigzag_4(slide, title, intro, items):
 
 ```python
 def replace_table_in_slide(slide, headers, rows,
-                            x=2.25, y=3.38, w=14.42, max_h=7.5):
+                            x=2.25, y=3.38, w=14.42, max_h=7.5,
+                            header_size=24, body_size=24):
     """
     Xóa table placeholder cũ trên slide, thêm table mới dùng data thực.
     headers: list of column names, vd ["Hạng mục", "KPI 1", "KPI 2", "KPI 3"]
     rows: list of list values, mỗi row khớp số cột với headers
+    Font size mặc định 24pt theo template v3.1.
     """
     # 1. Xóa table cũ
     for shape in list(slide.shapes):
@@ -220,8 +234,8 @@ def replace_table_in_slide(slide, headers, rows,
     # 2. Tính kích thước
     n_rows = len(rows) + 1  # +1 cho header
     n_cols = len(headers)
-    # Auto-height: 0.7" header + 0.5" mỗi body row, capped ở max_h
-    h_calc = 0.7 + 0.5 * len(rows)
+    # Auto-height: 0.8" header + 0.55" mỗi body row (24pt cao hơn 20pt)
+    h_calc = 0.8 + 0.55 * len(rows)
     h = min(h_calc, max_h)
 
     # 3. Add table mới
@@ -230,7 +244,7 @@ def replace_table_in_slide(slide, headers, rows,
         Inches(x), Inches(y), Inches(w), Inches(h))
     tbl = tbl_shape.table
 
-    # 4. Style header row
+    # 4. Style header row (24pt theo v3.1)
     for c, hd in enumerate(headers):
         cell = tbl.cell(0, c)
         cell.fill.solid()
@@ -242,12 +256,12 @@ def replace_table_in_slide(slide, headers, rows,
         run = p.add_run()
         run.text = str(hd)
         run.font.bold = True
-        run.font.size = Pt(15)
+        run.font.size = Pt(header_size)   # ⬆ 24pt (cũ 22pt)
         run.font.color.rgb = WHITE
         run.font.name = FONT_HEAD
         cell.vertical_anchor = MSO_ANCHOR.MIDDLE
 
-    # 5. Body rows alternating
+    # 5. Body rows alternating (24pt theo v3.1)
     for r, row_data in enumerate(rows, start=1):
         bg = GRAY_TBL_EVEN if r % 2 == 1 else GRAY_TBL_ODD
         for c, val in enumerate(row_data):
@@ -261,7 +275,7 @@ def replace_table_in_slide(slide, headers, rows,
             run = p.add_run()
             run.text = str(val)
             run.font.bold = True
-            run.font.size = Pt(14)
+            run.font.size = Pt(body_size)  # ⬆ 24pt (cũ 20pt)
             run.font.color.rgb = BLACK
             run.font.name = FONT_BODY
             cell.vertical_anchor = MSO_ANCHOR.MIDDLE

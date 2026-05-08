@@ -1,17 +1,19 @@
 ---
 name: tda-kpi-report-slides
-description: "Tạo file .pptx báo cáo định kỳ (tuần/tháng/năm) bằng tiếng Việt theo template Tôn Đông Á v3, từ dữ liệu thô Excel/CSV/JSON/TXT. Hỗ trợ nhiều phòng ban (CNTT, Kế toán, HCM, Kinh doanh, QLK...). Trigger khi user yêu cầu báo cáo KPI/vận hành theo phòng, slide tổng hợp, đánh giá kỳ + định hướng kỳ tới, hoặc upload dữ liệu kèm yêu cầu trình bày thành slide."
+description: "Tạo file .pptx báo cáo định kỳ (tuần/tháng/năm) bằng tiếng Việt theo template Tôn Đông Á v3, từ dữ liệu thô Excel/CSV. Hỗ trợ nhiều phòng ban (CNTT, Kế toán, HCM, Kinh doanh, QLK...). Trigger khi user yêu cầu báo cáo KPI/vận hành theo phòng, slide tổng hợp, đánh giá kỳ + định hướng kỳ tới, hoặc upload dữ liệu kèm yêu cầu trình bày thành slide."
 ---
 
-# TDA KPI Report Slides (v2.3)
+# TDA KPI Report Slides (v2.4)
 
-Skill tạo slide báo cáo định kỳ (tuần / tháng / năm) cho phòng ban, tập trung vào KPI & vận hành. Đầu ra là file `.pptx` theo bộ nhận diện Tôn Đông Á v2 (đỏ chính + navy + cam cover, font Inter, slide 20×11.25 inch).
+Skill tạo slide báo cáo định kỳ (tuần / tháng / năm) cho phòng ban, tập trung vào KPI & vận hành. Đầu ra là file `.pptx` theo bộ nhận diện Tôn Đông Á v3.1 (đỏ chính + navy + cam cover, font Inter, slide 20×11.25 inch).
+
+> **v3.1 (template update)**: Slide 3 (`icon_rows`) giãn cách dọc — item start `T=2.33"` (cũ 1.91"), body height `0.67"` (cũ 0.53"), chứa thoải mái body 2 dòng. Slide 11 (`data_table`) đồng bộ font cell **24pt** cho cả header và body (cũ: 22pt + 20pt). Helpers `replace_table_in_slide()` và `build_icon_rows()` đã cập nhật theo. Mọi ràng buộc bất biến khác giữ nguyên.
 
 ## Khi nào dùng skill này
 
 Trigger khi người dùng:
 - Yêu cầu "làm báo cáo tuần/tháng/năm", "tổng hợp KPI", "slide báo cáo phòng …"
-- Upload 1 hoặc nhiều file dữ liệu thô (`.xlsx`, `.csv`, `.json`, `.txt`) và muốn trình bày lại
+- Upload 1 hoặc nhiều file dữ liệu thô (`.xlsx`, `.csv`) và muốn trình bày lại
 - Nhắc đến "slide Tôn Đông Á", "template phòng CNTT", "báo cáo vận hành"
 - Bất kỳ yêu cầu nào kết thúc bằng một file `.pptx` báo cáo định kỳ bằng tiếng Việt
 
@@ -19,8 +21,8 @@ Trigger khi người dùng:
 
 ```
 Dữ liệu thô  →  Phân tích  →  Tổng hợp  →  Đánh giá &  →  Render slide  →  QA  →  .pptx
-  (Excel/CSV/                    (KPI, nổi bật,  Định hướng    (theo template
-   JSON/TXT)                      tồn đọng)      (Bước 3c)     Tôn Đông Á v2)
+ (Excel/CSV)                  (KPI, nổi bật,  Định hướng    (theo template
+                               tồn đọng)      (Bước 3c)     Tôn Đông Á v3)
 ```
 
 Chạy theo các bước dưới đây; đừng nhảy bước. Bước 3b cho phép số slide động theo content, **Bước 3c bắt buộc** để có slide kết luận.
@@ -29,18 +31,18 @@ Chạy theo các bước dưới đây; đừng nhảy bước. Bước 3b cho p
 
 ## Ràng buộc bất biến (KHÔNG được vi phạm)
 
-Đây là **brand identity** Tôn Đông Á v2 — không thay đổi trong bất kỳ tình huống nào:
+Đây là **brand identity** Tôn Đông Á v3 — không thay đổi trong bất kỳ tình huống nào:
 
 | Element | Quy tắc |
 |---|---|
-| **Template gốc** | Chỉ dùng `assets/template/report-template.pptx` (15 slide v2). Không dùng template ngoài. |
+| **Template gốc** | Chỉ dùng `assets/template/report-template.pptx` (16 slide v3.1). Không dùng template ngoài. |
 | **Logo + footer** | Đã embed sẵn trong template — KHÔNG cần `add_picture(logo)` khi dùng Cách A. KHÔNG xóa các shape header/footer trắng có sẵn ở góc trên/dưới. |
 | **Slide size** | 20 × 11.25 inch (16:9 cinematic) — không resize |
 | **Font** | `Inter` (header + body). Không đổi sang Arial/Calibri/Roboto |
 | **Color cover** | Cam phẳng `#FF6600` + title navy `#000099` + dept navy — đã embed |
 | **Color content** | Title đỏ `#FF0000`, header card navy `#000099`, body đen `#212121`. **Không tráo đổi** |
 | **Slide 1 (cover)** | Layout cố định: title navy, period navy, department navy. Chỉ thay text qua `replace_cover_period()` (Quirk 2 — 6 paragraph riêng) |
-| **Slide 15 (closing)** | "Trân trọng kính chào !" đỏ, layout đơn giản — chỉ thay message nếu user yêu cầu |
+| **Slide 16 (closing)** | "Trân trọng kính chào !" đỏ, layout đơn giản — chỉ thay message nếu user yêu cầu |
 
 **Cho phép vary** (ở Bước 3b, Bước 5):
 - Layout của các content slide (icon_rows, cards_3col, numbered_zigzag_4, image_card_3col, data_table, timeline_4_horizontal, four_col_summary, chart_with_text)
@@ -144,8 +146,6 @@ CNTT_GROUPS = {
 |----|----|
 | `.xlsx`, `.xls` | `pandas.read_excel()` (cài: `pip install openpyxl pandas --break-system-packages`) |
 | `.csv`, `.tsv` | `pandas.read_csv()` |
-| `.json` | `json.load()` + chuyển sang DataFrame nếu tabular |
-| `.txt` | Đọc raw, quan sát xem có bảng không |
 
 **Luôn bắt đầu bằng thăm dò:**
 ```python
@@ -194,42 +194,15 @@ Ví dụ: ❌ *"3 ngày (10-13/04). Đã hoàn tất: xử lý PR tồn lỗi...
 Người xem chỉ cần biết **mục nào CHƯA xong** để chú ý. Mục đã xong giữ trang trọng, không cần đánh dấu.
 
 | Trạng thái | Cách đánh dấu |
-|------------|---------------|
-| Đã hoàn tất (`Đã hoàn tất == True`) | **Tiêu đề navy** (`#000099`). Không icon, không tô màu khác. |
-| Đang triển khai / chưa hoàn tất (`Đã hoàn tất == False`) | **Tô màu ĐỎ** (`#FF0000` / `RGBColor(0xFF, 0x00, 0x00)`) cho toàn bộ chữ tiêu đề. Không icon. |
+|---|---|
+| Đã hoàn tất (`Đã hoàn tất == True`) | Header **NAVY** `#000099` |
+| Chưa hoàn tất / đang triển khai (`Đã hoàn tất == False`) | Header **ĐỎ** `#FF0000` |
 
-**Quy tắc áp dụng:**
-- Chỉ tô màu **HEADER**, không tô body
-- Nếu 1 item gộp nhiều CV mà có ít nhất 1 CV chưa xong → tô đỏ (ưu tiên cảnh báo)
-- Slide 9 "Tồn đọng & Trọng tâm kỳ tới" và slide 12 "Hoạt động khác (kế hoạch)" → tô đỏ toàn bộ header (vì là việc tương lai/chưa làm)
-- KHÔNG dùng icon `✅`, `⏳`, `🔴` ở đầu header — chỉ dùng cách tô màu
+**Quy tắc:** Chỉ tô màu HEADER (không tô body). Item gộp nhiều CV mà có ≥ 1 CV chưa xong → tô đỏ (ưu tiên cảnh báo). Slide 9 (tồn đọng) và slide 12 (hoạt động khác kế hoạch) → toàn bộ header đỏ vì là việc tương lai. **TUYỆT ĐỐI KHÔNG dùng emoji** (`✅`, `⏳`, `🔴`) — render không nhất quán, gây rối thị giác.
 
-**⚠️ TUYỆT ĐỐI KHÔNG dùng icon emoji** cho trạng thái — render không nhất quán hoặc gây rối thị giác. Tô màu chữ là cách sạch nhất.
+**⚠️ Quirk template:** Một số header trong template mặc định màu ĐỎ (slide 9 toàn bộ, slide 12 placeholder). Nếu mục thực sự ĐÃ HOÀN TẤT, phải chủ động set NAVY — không thể bỏ qua, nếu không sẽ giữ màu đỏ template → người xem hiểu nhầm.
 
-**Cách implement bằng python-pptx:**
-```python
-from pptx.dml.color import RGBColor
-
-RED  = RGBColor(0xFF, 0x00, 0x00)  # đỏ pending
-NAVY = RGBColor(0x00, 0x00, 0x99)  # navy done
-
-def force_header_color(slide, shape_name, is_pending: bool):
-    """LUÔN force màu — đỏ nếu pending, navy nếu done.
-    Phải force cả 2 chiều vì template có một số header mặc định ĐỎ.
-    """
-    target = RED if is_pending else NAVY
-    for shape in slide.shapes:
-        if shape.name != shape_name or not shape.has_text_frame:
-            continue
-        for para in shape.text_frame.paragraphs:
-            for run in para.runs:
-                if run.text.strip():
-                    run.font.color.rgb = target
-        return True
-    return False
-```
-
-**⚠️ Quirk quan trọng**: Template gốc v2 có một số header mặc định màu đỏ (slide 9 toàn bộ pending, slide 12 placeholder). Nếu mục trên các slide này thực sự ĐÃ HOÀN TẤT, phải chủ động set NAVY (không thể bỏ qua), nếu không sẽ giữ màu đỏ template → người xem hiểu nhầm.
+**Helper:** `force_header_color(slide, shape_name, is_pending: bool)` — luôn force cả 2 chiều (đỏ nếu pending, navy nếu done). Code đầy đủ: xem `references/building-blocks.md`.
 
 ### Bước 2b-ter. **Override mặc định "THÁNG" khi báo cáo TUẦN/NĂM** (BẮT BUỘC)
 
@@ -292,7 +265,7 @@ df["Score"] = df.apply(priority_score, axis=1)
 
 Từ dữ liệu đã phân tích, tạo ra một **report outline** dạng Python dict/JSON. Đây là bước suy luận quan trọng nhất, không được lười.
 
-Cấu trúc mặc định (phỏng theo template Tôn Đông Á v2):
+Cấu trúc mặc định (phỏng theo template Tôn Đông Á v3):
 
 ```python
 report = {
@@ -520,17 +493,17 @@ Slide 16 LUÔN cuối. Slide 13 nằm áp chót về content (sau khi xóa chart
 ## Bước 4. Quyết định chart (chỉ khi cần)
 
 **Chỉ thêm chart nếu** dữ liệu có 1 trong các đặc điểm:
-- So sánh ≥ 3 mốc thời gian → line / column chart (slide 14 template)
-- Phân bổ tổng thể → pie/donut, tối đa 5 slice (slide 13 template)
+- So sánh ≥ 3 mốc thời gian → line / column chart (slide 15 template)
+- Phân bổ tổng thể → pie/donut, tối đa 5 slice (slide 14 template)
 - Tỷ lệ hoàn thành / KPI đơn lẻ → progress bar / big stat
-- Tỷ trọng giữa các nhóm CV → donut chart (slide 13)
+- Tỷ trọng giữa các nhóm CV → donut chart (slide 14)
 
 **Không thêm chart khi:**
 - Dữ liệu định tính (trạng thái, mô tả)
 - Chỉ 1–2 điểm dữ liệu
 - Người dùng đã có bảng rõ ràng
 
-Template v2 có sẵn slide 13 (donut) và slide 14 (column-clustered). Dùng `replace_chart_data()` (helper trong `building-blocks.md`) để thay data, **không cần build chart từ scratch**.
+Template có sẵn slide 14 (donut) và slide 15 (column-clustered). Dùng `replace_chart_data()` (helper trong `building-blocks.md`) để thay data, **không cần build chart từ scratch**.
 
 ---
 
@@ -597,12 +570,13 @@ debug_slide_shapes(prs)  # CHẠY TRƯỚC khi sửa
 
 **Các quirks quan trọng:** Template được xuất từ Gamma.app — mỗi dòng text là 1 shape riêng (`TextBox 3`, `TextBox 4`...), KHÔNG phải paragraph trong cùng textbox. Một số title nằm trong Group (slide 11/13/14) — mọi helper phải recurse vào Group. Slide 11 (table) là placeholder — phải dùng `replace_table_in_slide()` với data thực. Slide 1 (cover) mỗi dòng là paragraph riêng — dùng `replace_cover_period()`. Title đa dòng có thể đè body — dùng `shrink_title_if_long()` cho slide 2, 6, 9, 11.
 
-**Bảng giới hạn ký tự header (đã verify):**
+**Bảng giới hạn ký tự header (đã verify, v3.1):**
 
 | Slide | Loại | Max chars | Ghi chú |
 |---|---|---|---|
 | 2 (TOC) | TOC card | **≤ 18** | Vượt → wrap 2 dòng đè body description |
-| 3 (icon_rows) | Header item | ≤ 25 | Width rộng |
+| **3 (icon_rows)** | **Header item** | **≤ 28** | Width rộng 10.88", size 24pt — v3.1 cho phép header dài hơn |
+| **3 (icon_rows)** | **Body item** | **≤ 150** | v3.1 body height 0.67" chứa 2 dòng size 20pt |
 | 4 (zigzag 4-col) | Header item | **≤ 14** | Width hẹp nhất, hay wrap |
 | 5 (cards_3col) | Header card | ≤ 22 | OK |
 | 6 (image+cards) | Header card 1 (có image) | **≤ 12** | Card 1 ngay dưới title, hay đè body |
@@ -610,7 +584,8 @@ debug_slide_shapes(prs)  # CHẠY TRƯỚC khi sửa
 | 6 | Body cột trái | ≤ 90 ký tự | Image che bên phải |
 | 7 | Header column | ≤ 16 | |
 | 9 (pending 4-col) | Header item | ≤ 22 | OK |
-| 11 (table) | Title slide | **≤ 30** | Vượt → đè logo Tôn Đông Á góc phải |
+| **11 (table)** | Title slide | **≤ 30** | Vượt → đè logo Tôn Đông Á góc phải |
+| **11 (table)** | **Cell text (24pt v3.1)** | **≤ 18 ký tự / cell** | Font 24pt to hơn, cell 3-5 cột vẫn vừa nhưng không nhồi nhét. ≥ 6 cột nên rút về 18-20pt manual |
 | 12 (image_card_3col) | Header card | **≤ 12** | KHÔNG dùng cho Đánh giá+Định hướng — body box quá nhỏ (1.42") |
 | **13 (cards_3col text)** | **Header card** | **≤ 25** | DÀNH RIÊNG cho Đánh giá+Định hướng. Body 5.07"×2.73", không cần resize. Mapping interleaved (15+12, 16+13, 18+17) — xem Bước 3c |
 | 13 | Title slide | ≤ 50 | Full-width 18.54", an toàn |
@@ -618,7 +593,7 @@ debug_slide_shapes(prs)  # CHẠY TRƯỚC khi sửa
 
 **12 quirks chi tiết kèm code fix + helper functions:** xem `references/edit-template.md` và `references/building-blocks.md`. Script copy-paste được: `scripts/build_example.py`.
 
-**Xóa slide không dùng** (vd: nếu không có nội dung CĐS/AI → xóa slide D, không có chart → xóa slide 13/14):
+**Xóa slide không dùng** (vd: nếu không có nội dung CĐS/AI → xóa slide D, không có chart → xóa slide 14/15):
 ```python
 delete_slide(prs, slide_idx)  # xóa từ CUỐI lên ĐẦU để tránh lệch index
 ```

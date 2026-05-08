@@ -227,6 +227,9 @@ def replace_cover_period(slide_cover, period_current, period_next, department=No
                 para.runs[0].text = department
                 for r in para.runs[1:]:
                     r.text = ""
+        # ⚠️ return PHẢI nằm ngoài for para — trong for shape (sau khi xử lý hết
+        # tất cả paragraph của shape đầu tiên match). Trước đây bị indent sai
+        # trong v2.3 → return True sau para đầu (rỗng) → cover không update.
         return True
     return False
 ```
@@ -318,12 +321,14 @@ def move_slide_to(prs, src_idx, dst_idx):
 
 ---
 
-## Helper 9: Replace table với data động (Pattern 4)
+## Helper 9: Replace table với data động (Pattern 4) — v3.1
 
 ```python
 def replace_table_in_slide(slide, headers, rows,
-                            x=2.25, y=3.38, w=14.42, max_h=7.5):
+                            x=2.25, y=3.38, w=14.42, max_h=7.5,
+                            header_size=24, body_size=24):
     """Xóa table cũ + add table mới với data động.
+    v3.1: font size 24pt mặc định cho cả header và body (đồng bộ template mới).
     Xem chi tiết style trong layout-patterns.md → Pattern 4.
     """
     # Xóa table cũ
@@ -335,7 +340,8 @@ def replace_table_in_slide(slide, headers, rows,
 
     n_rows = len(rows) + 1
     n_cols = len(headers)
-    h_calc = 0.7 + 0.5 * len(rows)
+    # v3.1: 24pt cao hơn → row height tăng theo
+    h_calc = 0.8 + 0.55 * len(rows)
     h = min(h_calc, max_h)
 
     tbl_shape = slide.shapes.add_table(
@@ -343,7 +349,7 @@ def replace_table_in_slide(slide, headers, rows,
         Inches(x), Inches(y), Inches(w), Inches(h))
     tbl = tbl_shape.table
 
-    # Header
+    # Header (v3.1: 24pt)
     for c, hd in enumerate(headers):
         cell = tbl.cell(0, c)
         cell.fill.solid()
@@ -351,11 +357,11 @@ def replace_table_in_slide(slide, headers, rows,
         tf = cell.text_frame; tf.clear()
         p = tf.paragraphs[0]; p.alignment = PP_ALIGN.CENTER
         run = p.add_run(); run.text = str(hd)
-        run.font.bold = True; run.font.size = Pt(15)
+        run.font.bold = True; run.font.size = Pt(header_size)
         run.font.color.rgb = WHITE; run.font.name = FONT_HEAD
         cell.vertical_anchor = MSO_ANCHOR.MIDDLE
 
-    # Body alternating
+    # Body alternating (v3.1: 24pt)
     for r, row_data in enumerate(rows, start=1):
         bg = GRAY_TBL_EVEN if r % 2 == 1 else GRAY_TBL_ODD
         for c, val in enumerate(row_data):
@@ -364,7 +370,7 @@ def replace_table_in_slide(slide, headers, rows,
             tf = cell.text_frame; tf.clear()
             p = tf.paragraphs[0]; p.alignment = PP_ALIGN.CENTER
             run = p.add_run(); run.text = str(val)
-            run.font.bold = True; run.font.size = Pt(14)
+            run.font.bold = True; run.font.size = Pt(body_size)
             run.font.color.rgb = BLACK; run.font.name = FONT_BODY
             cell.vertical_anchor = MSO_ANCHOR.MIDDLE
 
